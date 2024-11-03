@@ -1,5 +1,16 @@
-from datetime import datetime
-import requests
+import sys
+import os
+import network
+import ubinascii
+import machine
+from machine import Pin
+import urequests as requests
+import ujson
+import time
+import utime
+import math
+from secrets import secrets  # Archivo separado para las credenciales Wi-Fi
+from Wifi_lib import wifi_init 
 
 # URLs de los archivos PHP en el servidor
 URL_PUENTE = "http://192.168.0.21/infrasense-IOT/puente.php"  # URL para manejar puentes
@@ -298,6 +309,8 @@ def enviar_datos(id_puente, id_galga):
         data = {
             "idGalga": id_galga,
             "Cos_Taylor": cos_taylor_value,
+            "Cos_Trig":cos_trig_value,
+            "Error":error_value,
             "Fecha": fecha_actual
         }
 
@@ -338,17 +351,23 @@ def modificar_dato():
 
     print("Seleccione el dato a modificar:")
     for i, p in enumerate(datos, start=1):
-        print(f"{i}. ID: {p['idDato']} - Valor: {p['valor']} - Fecha Hora: {p['fecha_hora']}")
+        print(f"{i}. ID: {p['idDato']} - Cos Taylor: {p['Cos_Taylor']} - Cos Trig: {p['Cos_Trig']} - Error: {p['Error']} - Fecha Hora: {p['fecha_hora']}")
     seleccion = int(input("Número del dato: ")) - 1
 
     id_dato = datos[seleccion]["idDato"]
-    valor_actual = datos[seleccion]["valor"]
+    taylor_actual = datos[seleccion]["Cos_Taylor"]
+    trig_actual = datos[seleccion]["Cos_Trig"]
+    error_actual = datos[seleccion]["Error"]
 
-    nuevo_valor = input(f"Nuevo valor (actual: {valor_actual}): ") or valor_actual
+    nuevo_taylor = input(f"Nuevo valor Taylor (actual: {taylor_actual}): ") or taylor_actual
+    nuevo_trig = input(f"Nuevo valor Trig (actual: {trig_actual}): ") or trig_actual
+    nuevo_error = input(f"Nuevo valor Error (actual: {error_actual}): ") or error_actual
 
     datos = {
         "id_dato": id_dato,
-        "nuevo_valor": nuevo_valor
+        "nuevo_taylor": nuevo_taylor
+        "nuevo_trig": nuevo_trig
+        "nuevo_error": nuevo_error
     }
     try:
         respuesta = requests.post(URL_DATOS, data=datos)
@@ -377,7 +396,7 @@ def eliminar_dato():
 
     print("Seleccione el dato a eliminar:")
     for i, p in enumerate(datos, start=1):
-        print(f"{i}. ID: {p['idDato']} - Valor: {p['valor']} - Fecha Hora: {p['fecha_hora']}")
+        print(f"{i}. ID: {p['idDato']} - Cos Taylor: {p['Cos_Taylor']} - Cos Trig: {p['Cos_Trig']} - Error: {p['Error']} - Fecha Hora: {p['fecha_hora']}")
     seleccion = int(input("Número del dato: ")) - 1
 
     id_dato = datos[seleccion]["idDato"]
@@ -537,5 +556,5 @@ def menu_principal():
             print("Opción no válida. Intente de nuevo.")
 
 # Ejecutar el menú principal
-
+wifi_init()
 menu_principal()
