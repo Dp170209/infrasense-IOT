@@ -1,4 +1,4 @@
-
+from datetime import datetime
 import requests
 
 # URLs de los archivos PHP en el servidor
@@ -456,10 +456,9 @@ def menu_galgas():
                 id_puente = puentes[seleccion]['idPuente']
                 
                 ubicacion = input("Ingrese la Ubicación de la Galga: ")
-                fecha_instalacion = input("Ingrese la Fecha de Instalación (YYYY-MM-DD): ")
                 
-                if ubicacion and fecha_instalacion:
-                    enviar_datos_galga(ubicacion, fecha_instalacion, id_puente)
+                if ubicacion:
+                    enviar_datos_galga(ubicacion, id_puente)
                 else:
                     print("Error: Por favor, complete todos los campos.")
         elif opcion == '2':
