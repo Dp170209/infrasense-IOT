@@ -5,12 +5,15 @@ if ($conexion->connect_error) {
     die("Conexión fallida: " . $conexion->connect_error);
 }
 
-header('Content-Type: application/json'); // Asegura que el contenido sea JSON
+header('Content-Type: application/json');
+
+// Lee el contenido JSON para las solicitudes que no usan `$_POST` directamente
+$inputData = json_decode(file_get_contents("php://input"), true);
 
 // Operación para insertar un nuevo puente
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['nombre_puente']) && isset($_POST['ubicacion']) && !isset($_POST['id_puente'])) {
-    $nombre_puente = $_POST['nombre_puente'];
-    $ubicacion = $_POST['ubicacion'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($inputData['nombre_puente']) && isset($inputData['ubicacion']) && !isset($inputData['id_puente'])) {
+    $nombre_puente = $inputData['nombre_puente'];
+    $ubicacion = $inputData['ubicacion'];
 
     $sql = "INSERT INTO Puente (nombre, ubicacion) VALUES ('$nombre_puente', '$ubicacion')";
 
@@ -46,10 +49,10 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id_puente'])) {
 }
 
 // Operación para modificar los datos de un puente específico
-elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_puente']) && !isset($_POST['accion'])) {
-    $id_puente = $_POST['id_puente'];
-    $nombre_puente = $_POST['nombre_puente'];
-    $ubicacion = $_POST['ubicacion'];
+elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($inputData['accion']) && $inputData['accion'] === 'modificar') {
+    $id_puente = $inputData['id_puente'];
+    $nombre_puente = $inputData['nombre_puente'];
+    $ubicacion = $inputData['ubicacion'];
 
     $sql = "UPDATE puente SET nombre = '$nombre_puente', ubicacion = '$ubicacion' WHERE idPuente = $id_puente";
     if ($conexion->query($sql) === TRUE) {
@@ -59,9 +62,9 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_puente']) && !
     }
 }
 
-// Operación para eliminar un puente específico (eliminación completa del registro)
-elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_puente']) && isset($_POST['accion']) && $_POST['accion'] === 'eliminar') {
-    $id_puente = $_POST['id_puente'];
+// Operación para eliminar un puente específico
+elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($inputData['id_puente']) && isset($inputData['accion']) && $inputData['accion'] === 'eliminar') {
+    $id_puente = $inputData['id_puente'];
 
     $sql = "DELETE FROM puente WHERE idPuente = $id_puente";
     if ($conexion->query($sql) === TRUE) {

@@ -7,6 +7,9 @@ if ($conexion->connect_error) {
 
 header('Content-Type: application/json');
 
+// Obtener el contenido JSON de la solicitud
+$input = json_decode(file_get_contents("php://input"), true);
+
 // Obtener todos los puentes
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET)) {
     $resultado = $conexion->query("SELECT * FROM datos_de_lectura");
@@ -38,21 +41,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET)) {
     } else {
         echo json_encode(["error" => "No se encontró el dato con el ID especificado."]);
     }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_dato']) && !isset($_POST['accion'])) {
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['id_dato']) && isset($input['nuevo_taylor']) && isset($input['nuevo_trig']) && isset($input['nuevo_error'])) {
     // Modificación de un registro
-    $id_dato = $_POST['id_dato'];
-    $nuevo_taylor = $_POST['nuevo_taylor'];
-    $nuevo_trig = $_POST['nuevo_trig'];
-    $nuevo_error = $_POST['nuevo_error'];
+    $id_dato = (int)$input['id_dato'];
+    $nuevo_taylor = (float)$input['nuevo_taylor'];
+    $nuevo_trig = (float)$input['nuevo_trig'];
+    $nuevo_error = (float)$input['nuevo_error'];
 
-    $sql = "UPDATE datos_de_lectura SET Cos_Taylor = '$nuevo_taylor', Cos_Trig = '$nuevo_trig',Error='$nuevo_error' WHERE idDato = $id_dato";
+    $sql = "UPDATE datos_de_lectura SET Cos_Taylor = '$nuevo_taylor', Cos_Trig = '$nuevo_trig', Error = '$nuevo_error' WHERE idDato = $id_dato";
     if ($conexion->query($sql) === TRUE) {
         echo json_encode(["success" => "Los datos se modificaron correctamente."]);
     } else {
         echo json_encode(["error" => "Error al modificar los datos: " . $conexion->error]);
     }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_dato']) && isset($_POST['accion']) && $_POST['accion'] === 'eliminar') {
-    $id_dato = $_POST['id_dato'];
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['id_dato']) && isset($input['accion']) && $input['accion'] === 'eliminar') {
+    $id_dato = (int)$input['id_dato'];
 
     $sql = "DELETE FROM datos_de_lectura WHERE idDato = $id_dato";
     if ($conexion->query($sql) === TRUE) {
@@ -60,19 +63,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET)) {
     } else {
         echo json_encode(["error" => "Error al eliminar el dato: " . $conexion->error]);
     }
-} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && empty($_POST)) {
-    // Nuevo manejador para datos JSON
-    $input = file_get_contents('php://input');
-    $data = json_decode($input, true);
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['idGalga'], $input['Cos_Taylor'], $input['Cos_Trig'], $input['Error'], $input['Fecha'])) {
+    // Inserción de nuevos datos
+    $idGalga = (int)$input['idGalga'];
+    $cosTaylor = (float)$input['Cos_Taylor'];
+    $cosTrig = (float)$input['Cos_Trig'];
+    $error = (float)$input['Error'];
+    $fecha = $conexion->real_escape_string($input['Fecha']);
 
-    // Validar y asignar los datos necesarios
-    $idGalga = isset($data['idGalga']) ? (int)$data['idGalga'] : 0;
-    $cosTaylor = isset($data['Cos_Taylor']) ? (float)$data['Cos_Taylor'] : 0.0;
-    $cosTrig = isset($data['Cos_Trig']) ? (float)$data['Cos_Trig'] : 0.0;
-    $error = isset($data['Error']) ? (float)$data['Error'] : 0.0;
-    $fecha = isset($data['Fecha']) ? $conexion->real_escape_string($data['Fecha']) : date('Y-m-d H:i:s');
-
-    // Realizar la inserción en caso de tener un ID de galga válido
     if ($idGalga) {
         $stmt = $conexion->prepare("INSERT INTO datos_de_lectura (Cos_Taylor, Cos_Trig, Error, fecha_hora, idGalga) VALUES (?, ?, ?, ?, ?)");
         $stmt->bind_param("dddsd", $cosTaylor, $cosTrig, $error, $fecha, $idGalga);

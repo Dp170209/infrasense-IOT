@@ -42,7 +42,7 @@ print("Tarjeta Detectada:", BOARD_TYPE)
 # Configuración inicial
 NTaylor = 1
 angle = 0  # Ángulo en grados
-url = "http://192.168.0.21/infrasense-IOT/insertar_datos.php"  # Reemplaza con la URL correcta
+url = "http://192.168.0.13/infrasense-IOT/insertar_datos.php"  # Reemplaza con la URL correcta
 
 # Función para obtener la lista de puentes
 def obtener_puentes():

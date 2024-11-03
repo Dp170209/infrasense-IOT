@@ -1,42 +1,68 @@
-import requests
-from datetime import datetime 
+import sys
+import os
+import network
+import ubinascii
+import machine
+from machine import Pin
+import urequests as requests
+import ujson
+import time
+import utime
+import math
+from secrets import secrets  # Archivo separado para las credenciales Wi-Fi
+from Wifi_lib import wifi_init 
 
 # URLs de los archivos PHP en el servidor
-URL_PUENTE = "http://192.168.0.21/infrasense-IOT/puente.php"  # URL para manejar puentes
-URL_GALGA = "http://192.168.0.21/infrasense-IOT/galga.php"  # URL para manejar galgas
-URL_DATOS = "http://192.168.0.21/infrasense-IOT/datos.php"  
+URL_PUENTE = "http://192.168.0.21/infrasense-IOT/puente.php"
+URL_GALGA = "http://192.168.0.21/infrasense-IOT/galga.php"
+URL_DATOS = "http://192.168.0.21/infrasense-IOT/datos.php"
 
-# Funciones para Puentes
+# Funciones para manejo de errores HTTP y de red
+def http_post(url, data):
+    headers = {'Content-Type': 'application/json'}
+    try:
+        response = requests.post(url, data=ujson.dumps(data).encode('utf-8'), headers=headers)
+        if response.status_code == 200:
+            return response
+        else:
+            print(f"Error en la solicitud: Código de estado {response.status_code}")
+            return None
+    except requests.exceptions.RequestException as e:
+        print(f"Error en la conexión con el servidor: {e}")
+        return None
+
+def http_get(url):
+    try:
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
+        else:
+            print(f"Error en la solicitud: Código de estado {response.status_code}")
+            return None
+    except requests.exceptions.RequestException as e:
+        print(f"Error en la conexión con el servidor: {e}")
+        return None
+
+# --- Funciones de Puentes ---
 def enviar_datos_al_servidor(ubicacion, nombre_puente):
     datos = {
         "nombre_puente": nombre_puente,
         "ubicacion": ubicacion
     }
-    try:
-        respuesta = requests.post(URL_PUENTE, data=datos)
-        if respuesta.status_code == 200:
-            print("Éxito: Los datos se enviaron correctamente al servidor.")
-        else:
-            print(f"Error: No se pudo enviar los datos, código de error {respuesta.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error: No se pudo conectar con el servidor: {e}")
+    respuesta = http_post(URL_PUENTE, datos)
+    if respuesta:
+        print("Éxito: Los datos se enviaron correctamente al servidor.")
 
 def obtener_puentes():
-    try:
-        respuesta = requests.get(URL_PUENTE)
-        if respuesta.status_code == 200:
-            return respuesta.json()
-        else:
-            print(f"Error al obtener puentes: {respuesta.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error: No se pudo conectar con el servidor: {e}")
+    puentes = http_get(URL_PUENTE)
+    if puentes:
+        return puentes
+    print("Error: No se pudo obtener la lista de puentes.")
     return []
 
-# --- Funciones para Manipular Puentes ---
-
 def agregar_puente():
-    nombre_puente = input("Ingrese el nombre del puente: ")
-    ubicacion = input("Ingrese la ubicación: ")
+    nombre_puente = input("Ingrese el nombre del puente: ").strip()
+    ubicacion = input("Ingrese la ubicación: ").strip()
     if nombre_puente and ubicacion:
         enviar_datos_al_servidor(ubicacion, nombre_puente)
     else:
@@ -48,31 +74,34 @@ def modificar_puente():
         print("No hay puentes disponibles para modificar.")
         return
 
-    print("Seleccione el puente a modificar:")
-    for i, p in enumerate(puentes, start=1):
-        print(f"{i}. ID: {p['idPuente']} - Nombre: {p['nombre']}")
-    seleccion = int(input("Número del puente: ")) - 1
-
-    id_puente = puentes[seleccion]["idPuente"]
-    nombre_actual = puentes[seleccion]["nombre"]
-    ubicacion_actual = puentes[seleccion]["ubicacion"]
-
-    nuevo_nombre = input(f"Nuevo nombre (actual: {nombre_actual}): ") or nombre_actual
-    nueva_ubicacion = input(f"Nueva ubicación (actual: {ubicacion_actual}): ") or ubicacion_actual
-
-    datos = {
-        "id_puente": id_puente,
-        "nombre_puente": nuevo_nombre,
-        "ubicacion": nueva_ubicacion
-    }
     try:
-        respuesta = requests.post(URL_PUENTE, data=datos)
-        if respuesta.status_code == 200:
+        print("Seleccione el puente a modificar:")
+        for i, p in enumerate(puentes, start=1):
+            print(f"{i}. ID: {p['idPuente']} - Nombre: {p['nombre']}")
+        seleccion = int(input("Número del puente: ")) - 1
+        if seleccion < 0 or seleccion >= len(puentes):
+            raise ValueError("Selección inválida.")
+
+        id_puente = puentes[seleccion]["idPuente"]
+        nombre_actual = puentes[seleccion]["nombre"]
+        ubicacion_actual = puentes[seleccion]["ubicacion"]
+
+        nuevo_nombre = input(f"Nuevo nombre (actual: {nombre_actual}): ").strip() or nombre_actual
+        nueva_ubicacion = input(f"Nueva ubicación (actual: {ubicacion_actual}): ").strip() or ubicacion_actual
+
+        datos_modificados = {
+            "id_puente": id_puente,
+            "nombre_puente": nuevo_nombre,
+            "ubicacion": nueva_ubicacion,
+            "accion": "modificar"
+        }
+        respuesta = http_post(URL_PUENTE, datos_modificados)
+        if respuesta:
             print("El puente se modificó correctamente.")
-        else:
-            print(f"Error en la modificación: {respuesta.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"No se pudo conectar con el servidor: {e}")
+    except ValueError as e:
+        print(f"Error de selección: {e}")
+    except Exception as e:
+        print("Error inesperado:", e)
 
 def eliminar_puente():
     puentes = obtener_puentes()
@@ -80,27 +109,25 @@ def eliminar_puente():
         print("No hay puentes disponibles para eliminar.")
         return
 
-    print("Seleccione el puente a eliminar:")
-    for i, p in enumerate(puentes, start=1):
-        print(f"{i}. ID: {p['idPuente']} - Nombre: {p['nombre']}")
-    seleccion = int(input("Número del puente: ")) - 1
+    try:
+        print("Seleccione el puente a eliminar:")
+        for i, p in enumerate(puentes, start=1):
+            print(f"{i}. ID: {p['idPuente']} - Nombre: {p['nombre']}")
+        seleccion = int(input("Número del puente: ")) - 1
+        if seleccion < 0 or seleccion >= len(puentes):
+            raise ValueError("Selección inválida.")
 
-    id_puente = puentes[seleccion]["idPuente"]
-
-    confirmacion = input("¿Está seguro de que desea eliminar este puente? (s/n): ").lower()
-    if confirmacion == "s":
-        datos = {
-            "id_puente": id_puente,
-            "accion": "eliminar"
-        }
-        try:
-            respuesta = requests.post(URL_PUENTE, data=datos)
-            if respuesta.status_code == 200:
+        id_puente = puentes[seleccion]["idPuente"]
+        confirmacion = input("¿Está seguro de que desea eliminar este puente? (s/n): ").lower()
+        if confirmacion == "s":
+            datos = {"id_puente": id_puente, "accion": "eliminar"}
+            respuesta = http_post(URL_PUENTE, datos)
+            if respuesta:
                 print("El puente se eliminó correctamente.")
-            else:
-                print(f"Error al eliminar el puente: {respuesta.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"No se pudo conectar con el servidor: {e}")
+    except ValueError as e:
+        print(f"Error de selección: {e}")
+    except Exception as e:
+        print("Error inesperado:", e)
 
 def mostrar_puentes():
     puentes = obtener_puentes()
@@ -113,35 +140,24 @@ def mostrar_puentes():
             print(f"Nombre: {puente['nombre']}")
             print(f"Ubicación: {puente['ubicacion']}")
             print("-" * 30)
-            
-# Funciones para Galgas
 
+# --- Funciones de Galgas ---
 def enviar_datos_galga(ubicacion, id_puente):
-    fecha_instalacion = datetime.now().strftime("%Y-%m-%d")  # Fecha actual en formato YYYY-MM-DD
-    try:
-        datos = {
-            "ubicacion_galga": ubicacion,
-            "fecha_instalacion": fecha_instalacion,  # Usar la fecha actual del sistema
-            "id_puente": id_puente
-        }
-        respuesta = requests.post(URL_GALGA, data=datos)
-        
-        if respuesta.status_code == 200:
-            print("Éxito: Los datos de la galga se enviaron correctamente al servidor.")
-        else:
-            print(f"Error en la solicitud: {respuesta.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error: No se pudo conectar con el servidor: {e}")
+    fecha_instalacion = "{:04}-{:02}-{:02}".format(utime.localtime()[0], utime.localtime()[1], utime.localtime()[2])
+    datos = {
+        "ubicacion_galga": ubicacion,
+        "fecha_instalacion": fecha_instalacion,
+        "id_puente": id_puente
+    }
+    respuesta = http_post(URL_GALGA, datos)
+    if respuesta:
+        print("Éxito: Los datos de la galga se enviaron correctamente al servidor.")
 
 def obtener_galgas():
-    try:
-        respuesta = requests.get(URL_GALGA)
-        if respuesta.status_code == 200:
-            return respuesta.json()
-        else:
-            print(f"Error al obtener galgas: {respuesta.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"Error: No se pudo conectar con el servidor: {e}")
+    galgas = http_get(URL_GALGA)
+    if galgas:
+        return galgas
+    print("Error: No se pudo obtener la lista de galgas.")
     return []
 
 def modificar_galga():
@@ -150,37 +166,34 @@ def modificar_galga():
         print("No hay galgas disponibles para modificar.")
         return
 
-    print("Seleccione una Galga para Modificar:")
-    for i, galga in enumerate(galgas, start=1):
-        print(f"{i}. ID: {galga['idGalga']}, Ubicación: {galga['ubicacion']}")
-    
-    seleccion = int(input("Seleccione el número de la galga a modificar: ")) - 1
-    id_galga = galgas[seleccion]['idGalga']
-    galga_actual = galgas[seleccion]["ubicacion"]
-    fecha_actual = galgas[seleccion]["fecha_instalacion"]
-    
-    nueva_ubicacion = input(f"Nueva Ubicación de la Galga (actual: {galga_actual}: ") or galga_actual
-    nueva_fecha_instalacion = input(f"Nueva Fecha de Instalación (actual: {fecha_actual}: ") or fecha_actual
-    
-    if nueva_ubicacion and nueva_fecha_instalacion:
+    try:
+        print("Seleccione una Galga para Modificar:")
+        for i, galga in enumerate(galgas, start=1):
+            print(f"{i}. ID: {galga['idGalga']}, Ubicación: {galga['ubicacion']}")
+        seleccion = int(input("Seleccione el número de la galga a modificar: ")) - 1
+        if seleccion < 0 or seleccion >= len(galgas):
+            raise ValueError("Selección inválida.")
+
+        id_galga = galgas[seleccion]['idGalga']
+        galga_actual = galgas[seleccion]["ubicacion"]
+        fecha_actual = galgas[seleccion]["fecha_instalacion"]
+
+        nueva_ubicacion = input(f"Nueva Ubicación de la Galga (actual: {galga_actual}): ").strip() or galga_actual
+        nueva_fecha_instalacion = input(f"Nueva Fecha de Instalación (actual: {fecha_actual}): ").strip() or fecha_actual
+
         datos = {
             "id_galga": id_galga,
             "ubicacion_galga": nueva_ubicacion,
             "fecha_instalacion": nueva_fecha_instalacion,
-            "accion": "modificar"  # Añadido para indicar que se trata de una modificación
+            "accion": "modificar"
         }
-        
-        try:
-            respuesta = requests.post(URL_GALGA, data=datos)
-            if respuesta.status_code == 200:
-                print("Éxito: La galga se modificó correctamente.")
-            else:
-                print(f"Error en la modificación: {respuesta.status_code}")
-                print("Respuesta del servidor:", respuesta.text)
-        except requests.exceptions.RequestException as e:
-            print(f"Error: No se pudo conectar con el servidor: {e}")
-    else:
-        print("Error: Por favor, complete todos los campos.")
+        respuesta = http_post(URL_GALGA, datos)
+        if respuesta:
+            print("Éxito: La galga se modificó correctamente.")
+    except ValueError as e:
+        print(f"Error de selección: {e}")
+    except Exception as e:
+        print("Error inesperado:", e)
         
 def eliminar_galga():
     galgas = obtener_galgas()
@@ -201,8 +214,9 @@ def eliminar_galga():
             "id_galga": id_galga,
             "accion": "eliminar"
         }
+        headers = {'Content-Type': 'application/json'}
         try:
-            respuesta = requests.post(URL_GALGA, data=datos)
+            respuesta = requests.post(URL_GALGA, data=ujson.dumps(datos).encode('utf-8'), headers=headers)
             if respuesta.status_code == 200:
                 print("Éxito: La galga se eliminó correctamente.")
             else:
@@ -302,8 +316,6 @@ def enviar_datos(id_puente, id_galga):
             "Error":error_value,
             "Fecha": fecha_actual
         }
-
-        # Convertir el JSON en una cadena y enviarlo al servidor
         headers = {'Content-Type': 'application/json'}
         try:
             response = requests.post(URL_DATOS, data=ujson.dumps(data), headers=headers)
@@ -358,8 +370,9 @@ def modificar_dato():
         "nuevo_trig": nuevo_trig,
         "nuevo_error": nuevo_error
     }
+    headers = {'Content-Type': 'application/json'}
     try:
-        respuesta = requests.post(URL_DATOS, data=datos)
+        respuesta = requests.post(URL_DATOS, data=ujson.dumps(datos).encode('utf-8'), headers=headers)
         if respuesta.status_code == 200:
             print("El dato se modificó correctamente.")
         else:
@@ -375,7 +388,7 @@ def mostrar_datos():
     else:
         print("Listado de Datos:")
         for dato in datos:
-            print(dato)
+            print(f" ID: {dato['idDato']} - Cos Taylor: {dato['Cos_Taylor']} - Cos Trig: {dato['Cos_Trig']} - Error: {dato['Error']} - Fecha Hora: {dato['fecha_hora']} -  idGalga: {dato['idGalga']}")
             
 def eliminar_dato():
     datos = obtener_datos_lectura()
@@ -396,8 +409,9 @@ def eliminar_dato():
             "id_dato": id_dato,
             "accion": "eliminar"
         }
+        headers = {'Content-Type': 'application/json'}
         try:
-            respuesta = requests.post(URL_DATOS, data=datos)
+            respuesta = requests.post(URL_DATOS, data=ujson.dumps(datos).encode('utf-8'), headers=headers)
             if respuesta.status_code == 200:
                 print("El dato se eliminó correctamente.")
             else:
@@ -545,4 +559,8 @@ def menu_principal():
             print("Opción no válida. Intente de nuevo.")
 
 # Ejecutar el menú principal
-menu_principal()
+try:
+    wifi_init()
+    menu_principal()
+except Exception as e:
+    print("Error en la ejecución del programa:", e)

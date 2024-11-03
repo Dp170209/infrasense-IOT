@@ -5,13 +5,16 @@ if ($conexion->connect_error) {
     die("Conexión fallida: " . $conexion->connect_error);
 }
 
-header('Content-Type: application/json'); // Asegura que el contenido sea JSON
+header('Content-Type: application/json');
+
+// Capturar el contenido JSON de php://input y decodificarlo
+$input = json_decode(file_get_contents("php://input"), true);
 
 // Operación para insertar una nueva galga
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['ubicacion_galga']) && isset($_POST['fecha_instalacion']) && isset($_POST['id_puente']) && !isset($_POST['id_galga'])) {
-    $ubicacion_galga = $_POST['ubicacion_galga'];
-    $fecha_instalacion = $_POST['fecha_instalacion'];
-    $id_puente = $_POST['id_puente'];
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['ubicacion_galga']) && isset($input['fecha_instalacion']) && isset($input['id_puente']) && !isset($input['id_galga'])) {
+    $ubicacion_galga = $conexion->real_escape_string($input['ubicacion_galga']);
+    $fecha_instalacion = $conexion->real_escape_string($input['fecha_instalacion']);
+    $id_puente = $conexion->real_escape_string($input['id_puente']);
 
     $sql = "INSERT INTO galga (ubicacion, fecha_instalacion, idPuente) VALUES ('$ubicacion_galga', '$fecha_instalacion', $id_puente)";
 
@@ -35,7 +38,7 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET)) {
 
 // Operación para obtener los datos de una galga específica por ID
 elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id_galga'])) {
-    $id_galga = $_GET['id_galga'];
+    $id_galga = $conexion->real_escape_string($_GET['id_galga']);
     $resultado = $conexion->query("SELECT ubicacion, fecha_instalacion, idPuente FROM galga WHERE idGalga = $id_galga");
 
     if ($resultado->num_rows > 0) {
@@ -47,23 +50,27 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id_galga'])) {
 }
 
 // Operación para modificar los datos de una galga específica
-elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_galga']) && isset($_POST['accion']) && $_POST['accion'] === 'modificar') {
-    $id_galga = $_POST['id_galga'];
-    $ubicacion_galga = $_POST['ubicacion_galga'];
-    $fecha_instalacion = $_POST['fecha_instalacion'];
-    $id_puente = $_POST['id_puente'];
+elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['id_galga']) && isset($input['accion']) && $input['accion'] === 'modificar') {
+    if (isset($input['ubicacion_galga']) && isset($input['fecha_instalacion'])) {
+        $id_galga = $conexion->real_escape_string($input['id_galga']);
+        $ubicacion_galga = $conexion->real_escape_string($input['ubicacion_galga']);
+        $fecha_instalacion = $conexion->real_escape_string($input['fecha_instalacion']);
 
-    $sql = "UPDATE galga SET ubicacion = '$ubicacion_galga', fecha_instalacion = '$fecha_instalacion' WHERE idGalga = $id_galga";
-    if ($conexion->query($sql) === TRUE) {
-        echo json_encode(["success" => "Galga modificada correctamente."]);
+        $sql = "UPDATE galga SET ubicacion = '$ubicacion_galga', fecha_instalacion = '$fecha_instalacion' WHERE idGalga = $id_galga";
+        
+        if ($conexion->query($sql) === TRUE) {
+            echo json_encode(["success" => "Galga modificada correctamente."]);
+        } else {
+            echo json_encode(["error" => "Error al modificar la galga: " . $conexion->error]);
+        }
     } else {
-        echo json_encode(["error" => "Error al modificar la galga: " . $conexion->error]);
+        echo json_encode(["error" => "Datos incompletos para la modificación."]);
     }
 }
 
 // Operación para eliminar una galga específica
-elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_galga']) && isset($_POST['accion']) && $_POST['accion'] === 'eliminar') {
-    $id_galga = $_POST['id_galga'];
+elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($input['id_galga']) && isset($input['accion']) && $input['accion'] === 'eliminar') {
+    $id_galga = $conexion->real_escape_string($input['id_galga']);
 
     $sql = "DELETE FROM galga WHERE idGalga = $id_galga";
     if ($conexion->query($sql) === TRUE) {
