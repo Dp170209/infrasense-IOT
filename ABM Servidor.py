@@ -1,16 +1,5 @@
-import sys
-import os
-import network
-import ubinascii
-import machine
-from machine import Pin
-import urequests as requests
-import ujson
-import time
-import utime
-import math
-from secrets import secrets  # Archivo separado para las credenciales Wi-Fi
-from Wifi_lib import wifi_init 
+import requests
+from datetime import datetime 
 
 # URLs de los archivos PHP en el servidor
 URL_PUENTE = "http://192.168.0.21/infrasense-IOT/puente.php"  # URL para manejar puentes
@@ -365,8 +354,8 @@ def modificar_dato():
 
     datos = {
         "id_dato": id_dato,
-        "nuevo_taylor": nuevo_taylor
-        "nuevo_trig": nuevo_trig
+        "nuevo_taylor": nuevo_taylor,
+        "nuevo_trig": nuevo_trig,
         "nuevo_error": nuevo_error
     }
     try:
@@ -556,5 +545,4 @@ def menu_principal():
             print("Opción no válida. Intente de nuevo.")
 
 # Ejecutar el menú principal
-wifi_init()
 menu_principal()
