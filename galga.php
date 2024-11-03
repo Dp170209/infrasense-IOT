@@ -47,13 +47,13 @@ elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['id_galga'])) {
 }
 
 // Operación para modificar los datos de una galga específica
-elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_galga']) && !isset($_POST['accion'])) {
+elseif ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['id_galga']) && isset($_POST['accion']) && $_POST['accion'] === 'modificar') {
     $id_galga = $_POST['id_galga'];
     $ubicacion_galga = $_POST['ubicacion_galga'];
     $fecha_instalacion = $_POST['fecha_instalacion'];
     $id_puente = $_POST['id_puente'];
 
-    $sql = "UPDATE galga SET ubicacion = '$ubicacion_galga', fecha_instalacion = '$fecha_instalacion', idPuente = $id_puente WHERE idGalga = $id_galga";
+    $sql = "UPDATE galga SET ubicacion = '$ubicacion_galga', fecha_instalacion = '$fecha_instalacion' WHERE idGalga = $id_galga";
     if ($conexion->query($sql) === TRUE) {
         echo json_encode(["success" => "Galga modificada correctamente."]);
     } else {

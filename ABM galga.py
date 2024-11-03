@@ -1,8 +1,8 @@
 import requests
+from datetime import datetime
 
-# URLs de los archivos PHP en el servidor
-URL_PUENTE = "http://127.0.0.1/IoT/puente.php"  # URL para manejar puentes
-URL_GALGA = "http://127.0.0.1/IoT/galga.php"  # URL para manejar galgas
+URL_PUENTE = "http://127.0.0.1/infrasense-IOT/puente.php"  # URL para manejar puentes
+URL_GALGA = "http://127.0.0.1/infrasense-IOT/galga.php"  # URL para manejar galgas
 
 # Funciones para Puentes
 
@@ -106,11 +106,12 @@ def mostrar_puentes():
 
 # Funciones para Galgas
 
-def enviar_datos_galga(ubicacion, fecha_instalacion, id_puente):
+def enviar_datos_galga(ubicacion, id_puente):
+    fecha_instalacion = datetime.now().strftime("%Y-%m-%d")  # Fecha actual en formato YYYY-MM-DD
     try:
         datos = {
             "ubicacion_galga": ubicacion,
-            "fecha_instalacion": fecha_instalacion,
+            "fecha_instalacion": fecha_instalacion,  # Usar la fecha actual del sistema
             "id_puente": id_puente
         }
         respuesta = requests.post(URL_GALGA, data=datos)
@@ -153,16 +154,22 @@ def modificar_galga():
         datos = {
             "id_galga": id_galga,
             "ubicacion_galga": nueva_ubicacion,
-            "fecha_instalacion": nueva_fecha_instalacion
+            "fecha_instalacion": nueva_fecha_instalacion,
+            "accion": "modificar"  # Añadido para indicar que se trata de una modificación
         }
+        
         try:
             respuesta = requests.post(URL_GALGA, data=datos)
             if respuesta.status_code == 200:
                 print("Éxito: La galga se modificó correctamente.")
             else:
                 print(f"Error en la modificación: {respuesta.status_code}")
+                print("Respuesta del servidor:", respuesta.text)
         except requests.exceptions.RequestException as e:
             print(f"Error: No se pudo conectar con el servidor: {e}")
+    else:
+        print("Error: Por favor, complete todos los campos.")
+
 
 def eliminar_galga():
     galgas = obtener_galgas()
@@ -265,10 +272,9 @@ def menu_galgas():
                 id_puente = puentes[seleccion]['idPuente']
                 
                 ubicacion = input("Ingrese la Ubicación de la Galga: ")
-                fecha_instalacion = input("Ingrese la Fecha de Instalación (YYYY-MM-DD): ")
                 
-                if ubicacion and fecha_instalacion:
-                    enviar_datos_galga(ubicacion, fecha_instalacion, id_puente)
+                if ubicacion:
+                    enviar_datos_galga(ubicacion, id_puente)
                 else:
                     print("Error: Por favor, complete todos los campos.")
         
