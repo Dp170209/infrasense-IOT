@@ -13,9 +13,9 @@ from secrets import secrets  # Archivo separado para las credenciales Wi-Fi
 from Wifi_lib import wifi_init 
 
 # URLs de los archivos PHP en el servidor
-URL_PUENTE = "http://192.168.0.21/infrasense-IOT/puente.php"
-URL_GALGA = "http://192.168.0.21/infrasense-IOT/galga.php"
-URL_DATOS = "http://192.168.0.21/infrasense-IOT/datos.php"
+URL_PUENTE = "http://192.168.0.13/infrasense-IOT/puente.php"
+URL_GALGA = "http://192.168.0.13/infrasense-IOT/galga.php"
+URL_DATOS = "http://192.168.0.13/infrasense-IOT/datos.php"
 
 # Funciones para manejo de errores HTTP y de red
 def http_post(url, data):

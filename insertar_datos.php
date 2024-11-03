@@ -1,5 +1,5 @@
 <?php
-$conexion = new mysqli("192.168.0.13", "root", "", "puentesDB");
+$conexion = new mysqli("192.168.0.13", "Dp", "", "puentesDB");
 
 if ($conexion->connect_error) {
     die("Conexión fallida: " . $conexion->connect_error);
