@@ -347,17 +347,18 @@ def modificar_dato():
     nuevo_valor = input(f"Nuevo valor (actual: {valor_actual}): ") or valor_actual
 
     datos = {
-        "id_puente": id_dato,
-        "valor": nuevo_valor
+        "id_dato": id_dato,
+        "nuevo_valor": nuevo_valor
     }
     try:
-        respuesta = requests.post(URL_PUENTE, data=datos)
+        respuesta = requests.post(URL_DATOS, data=datos)
         if respuesta.status_code == 200:
             print("El dato se modificó correctamente.")
         else:
             print(f"Error en la modificación: {respuesta.status_code}")
     except requests.exceptions.RequestException as e:
         print(f"No se pudo conectar con el servidor: {e}")
+
         
 def mostrar_datos():
     datos = obtener_datos_lectura()
