@@ -15,7 +15,7 @@ from Wifi_lib import wifi_init  # Librerías externas para iniciar Wi-Fi
 # Inicializar la conexión Wi-Fi
 wifi_init()
 
-# Detectar el tipo de tarjeta
+# Clase para detectar tipo de tarjeta
 class Board:
     class BoardType:
         PICO_W = 'Raspberry Pi Pico W'
@@ -35,14 +35,40 @@ class Board:
         else:
             return self.BoardType.UNKNOWN
 
+# Clase para manejar el módulo HX711
+class HX711:
+    def __init__(self, data_pin, clock_pin):
+        self.data_pin = Pin(data_pin, Pin.IN, pull=Pin.PULL_DOWN)
+        self.clock_pin = Pin(clock_pin, Pin.OUT)
+        self.clock_pin.value(0)
+
+    def read_raw(self):
+        count = 0
+        while self.data_pin.value() == 1:
+            pass  # Espera a que el pin de datos sea bajo
+        
+        for i in range(24):  # Leer 24 bits de datos
+            self.clock_pin.value(1)
+            count = (count << 1) | self.data_pin.value()
+            self.clock_pin.value(0)
+        
+        # Ajuste del bit de signo (para valores negativos)
+        self.clock_pin.value(1)
+        count ^= 0x800000
+        self.clock_pin.value(0)
+        return count
+
+    def read_weight(self, offset=0, scale=1):
+        # Calcular el peso en función de la lectura y la escala
+        raw_value = self.read_raw()
+        return (raw_value - offset) / scale
+
 # Detectar tipo de placa
 BOARD_TYPE = Board().type
 print("Tarjeta Detectada:", BOARD_TYPE)
 
 # Configuración inicial
-NTaylor = 1
-angle = 0  # Ángulo en grados
-url = "http://192.168.0.13/infrasense-IOT/insertar_datos.php"  # Reemplaza con la URL correcta
+url = "http://172.20.10.13/infrasense-IOT/insertar_datos.php"  # Reemplaza con la URL correcta
 
 # Función para obtener la lista de puentes
 def obtener_puentes():
@@ -71,19 +97,6 @@ def obtener_galgas(id_puente):
     except Exception as e:
         print("Error de conexión:", e)
         return []
-
-# Función para calcular el coseno usando la serie de Taylor
-def calculate_cos_taylor(x, n):
-    result = 1
-    sign = -1
-    factorial = 1
-    power = x * x
-    for i in range(1, n):
-        factorial *= (2 * i) * (2 * i - 1)
-        result += sign * power / factorial
-        power *= x * x
-        sign *= -1
-    return result
 
 # Seleccionar el puente y la galga
 def seleccionar_puente_y_galga():
@@ -117,23 +130,16 @@ def obtener_fecha_hora():
     return "{:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(tm[0], tm[1], tm[2], tm[3], tm[4], tm[5])
 
 # Bucle principal para generar datos y enviarlos
-def enviar_datos(id_puente, id_galga):
-    global NTaylor, angle
+def enviar_datos(id_puente, id_galga, hx711, offset, scale):
     while True:
-        # Configurar el ángulo en radianes
-        angle_rad = math.radians(angle)
-
-        # Calcular coseno con Taylor y trigonométrico
-        cos_taylor_value = calculate_cos_taylor(angle_rad, NTaylor)  # Aproximación con Taylor
-        cos_trig_value = math.cos(angle_rad)                         # Valor exacto usando math.cos
-        error_value = abs(cos_taylor_value - cos_trig_value)         # Error absoluto
+        # Leer el peso desde HX711
+        weight = hx711.read_weight(offset, scale)
         fecha_actual = obtener_fecha_hora()
+
         # Crear el JSON para enviar
         data = {
             "idGalga": id_galga,
-            "Cos_Taylor": cos_taylor_value,
-            "Cos_Trig":cos_trig_value,
-            "Error":error_value,
+            "Peso": weight,
             "Fecha": fecha_actual
         }
 
@@ -141,15 +147,11 @@ def enviar_datos(id_puente, id_galga):
         headers = {'Content-Type': 'application/json'}
         try:
             response = requests.post(url, data=ujson.dumps(data), headers=headers)
-            print("Ángulo:", angle, "Data:", data)
+            print("Peso:", weight, "Data:", data)
             print("Respuesta del servidor:", response.text)
             response.close()
         except Exception as e:
             print("Error al enviar datos:", e)
-
-        # Incrementar ángulo de 0 a 360
-        NTaylor += 1
-        angle = (angle + 1) % 360  # Incrementa en 1 grado, reinicia a 0 después de 360
 
         # Pausar entre envíos
         time.sleep(1)  # Pausa de 1 segundo entre envíos para evitar envíos rápidos
@@ -159,7 +161,13 @@ def main():
     id_puente, id_galga = seleccionar_puente_y_galga()
     if id_puente and id_galga:
         print(f"Iniciando envío de datos para Puente {id_puente} y Galga {id_galga}.")
-        enviar_datos(id_puente, id_galga)
+        
+        # Configurar HX711
+        hx711 = HX711(data_pin=21, clock_pin=22)
+        offset = hx711.read_raw()  
+        scale = 2280  
+        
+        enviar_datos(id_puente, id_galga, hx711, offset, scale)
     else:
         print("Selección de puente o galga inválida. Terminando programa.")
 

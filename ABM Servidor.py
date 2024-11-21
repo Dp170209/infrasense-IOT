@@ -1,566 +1,701 @@
-import sys
-import os
-import network
-import ubinascii
-import machine
-from machine import Pin
-import urequests as requests
-import ujson
-import time
-import utime
-import math
-from secrets import secrets  # Archivo separado para las credenciales Wi-Fi
-from Wifi_lib import wifi_init 
+import tkinter as tk
+from tkinter import messagebox
+import requests
+from datetime import datetime
 
-# URLs de los archivos PHP en el servidor
-URL_PUENTE = "http://192.168.0.13/infrasense-IOT/puente.php"
-URL_GALGA = "http://192.168.0.13/infrasense-IOT/galga.php"
-URL_DATOS = "http://192.168.0.13/infrasense-IOT/datos.php"
+URL_PUENTE = "http://172.20.10.13/infrasense-IOT/puente.php"
+URL_GALGA = "http://172.20.10.13/infrasense-IOT/galga.php"
+URL_DATOS = "http://172.20.10.13/infrasense-IOT/datos.php"
 
-# Funciones para manejo de errores HTTP y de red
-def http_post(url, data):
-    headers = {'Content-Type': 'application/json'}
-    try:
-        response = requests.post(url, data=ujson.dumps(data).encode('utf-8'), headers=headers)
-        if response.status_code == 200:
-            return response
-        else:
-            print(f"Error en la solicitud: Código de estado {response.status_code}")
-            return None
-    except requests.exceptions.RequestException as e:
-        print(f"Error en la conexión con el servidor: {e}")
-        return None
-
-def http_get(url):
-    try:
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            print(f"Error en la solicitud: Código de estado {response.status_code}")
-            return None
-    except requests.exceptions.RequestException as e:
-        print(f"Error en la conexión con el servidor: {e}")
-        return None
-
-# --- Funciones de Puentes ---
 def enviar_datos_al_servidor(ubicacion, nombre_puente):
-    datos = {
-        "nombre_puente": nombre_puente,
-        "ubicacion": ubicacion
-    }
-    respuesta = http_post(URL_PUENTE, datos)
-    if respuesta:
-        print("Éxito: Los datos se enviaron correctamente al servidor.")
-
-def obtener_puentes():
-    puentes = http_get(URL_PUENTE)
-    if puentes:
-        return puentes
-    print("Error: No se pudo obtener la lista de puentes.")
-    return []
-
-def agregar_puente():
-    nombre_puente = input("Ingrese el nombre del puente: ").strip()
-    ubicacion = input("Ingrese la ubicación: ").strip()
-    if nombre_puente and ubicacion:
-        enviar_datos_al_servidor(ubicacion, nombre_puente)
-    else:
-        print("Advertencia: Todos los campos son obligatorios.")
-
-def modificar_puente():
-    puentes = obtener_puentes()
-    if not puentes:
-        print("No hay puentes disponibles para modificar.")
-        return
-
     try:
-        print("Seleccione el puente a modificar:")
-        for i, p in enumerate(puentes, start=1):
-            print(f"{i}. ID: {p['idPuente']} - Nombre: {p['nombre']}")
-        seleccion = int(input("Número del puente: ")) - 1
-        if seleccion < 0 or seleccion >= len(puentes):
-            raise ValueError("Selección inválida.")
-
-        id_puente = puentes[seleccion]["idPuente"]
-        nombre_actual = puentes[seleccion]["nombre"]
-        ubicacion_actual = puentes[seleccion]["ubicacion"]
-
-        nuevo_nombre = input(f"Nuevo nombre (actual: {nombre_actual}): ").strip() or nombre_actual
-        nueva_ubicacion = input(f"Nueva ubicación (actual: {ubicacion_actual}): ").strip() or ubicacion_actual
-
-        datos_modificados = {
-            "id_puente": id_puente,
-            "nombre_puente": nuevo_nombre,
-            "ubicacion": nueva_ubicacion,
-            "accion": "modificar"
+        datos = {
+            "nombre_puente": nombre_puente,
+            "ubicacion": ubicacion
         }
-        respuesta = http_post(URL_PUENTE, datos_modificados)
-        if respuesta:
-            print("El puente se modificó correctamente.")
-    except ValueError as e:
-        print(f"Error de selección: {e}")
-    except Exception as e:
-        print("Error inesperado:", e)
+        # Send as JSON
+        respuesta = requests.post(URL_PUENTE, json=datos)
+        
+        if respuesta.status_code == 200:
+            messagebox.showinfo("Éxito", "Los datos se enviaron correctamente al servidor.")
+        else:
+            messagebox.showerror("Error", f"Error en la solicitud: {respuesta.status_code}")
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
+# Función para abrir una nueva ventana donde se ingresan los datos
+def datos_puente():
+    ventana_datos = tk.Toplevel(ventana)
+    ventana_datos.title("Ingresar Datos del Puente")
+    ventana_datos.geometry("300x200")
+    
+    # Etiquetas y campos de entrada
+    tk.Label(ventana_datos, text="Nombre del puente:").pack(pady=5)
+    entrada_nombre_puente = tk.Entry(ventana_datos)
+    entrada_nombre_puente.pack(pady=5)
+    
+    tk.Label(ventana_datos, text="Ubicación:").pack(pady=5)
+    entrada_ubicacion = tk.Entry(ventana_datos)
+    entrada_ubicacion.pack(pady=5)
+    
+    # Función que recoge los datos de los campos y llama a `enviar_datos_al_servidor`
+    def procesar_datos():
+        ubicacion = entrada_ubicacion.get()
+        nombre_puente = entrada_nombre_puente.get()
+        
+        if ubicacion and nombre_puente:
+            enviar_datos_al_servidor(ubicacion, nombre_puente)
+            ventana_datos.destroy()  # Cerrar la ventana después de enviar los datos
+        else:
+            messagebox.showwarning("Advertencia", "Por favor, completa todos los campos.")
+    
+    # Botón para enviar los datos
+    tk.Button(ventana_datos, text="Enviar", command=procesar_datos).pack(pady=20)
+# Función para obtener todos los puentes
+def obtener_puentes():
+    try:
+        respuesta = requests.get(URL_PUENTE)
+        if respuesta.status_code == 200:
+            return respuesta.json()  
+        else:
+            messagebox.showerror("Error", f"Error al obtener puentes: {respuesta.status_code}")
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
+    return []
+# Función para obtener datos de un puente específico
+def obtener_datos_puente(id_puente):
+    try:
+        respuesta = requests.get(URL_PUENTE, params={"id_puente": id_puente})
+        if respuesta.status_code == 200:
+            return respuesta.json()
+        else:
+            messagebox.showerror("Error", f"Error al obtener datos del puente: {respuesta.status_code}")
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
+    return {}
+# Función para modificar un puente
+def modificar_puente():
+    puentes = obtener_puentes() 
+    
+    ventana_modificar = tk.Toplevel(ventana)
+    ventana_modificar.title("Modificar Puente")
+    ventana_modificar.geometry("400x300")
+    tk.Label(ventana_modificar, text="Seleccione un Puente para Modificar:").pack(pady=5)
+    
+    puente_seleccionado = tk.StringVar()
+    opciones = [f"{p['idPuente']} - {p['nombre']}" for p in puentes]
+    menu_puentes = tk.OptionMenu(ventana_modificar, puente_seleccionado, *opciones)
+    menu_puentes.pack(pady=5)
+    
+    tk.Label(ventana_modificar, text="Nuevo Nombre del Puente:").pack(pady=5)
+    entrada_nombre = tk.Entry(ventana_modificar)
+    entrada_nombre.pack(pady=5)
+    
+    tk.Label(ventana_modificar, text="Nueva Ubicación:").pack(pady=5)
+    entrada_ubicacion = tk.Entry(ventana_modificar)
+    entrada_ubicacion.pack(pady=5)
+    
+    datos_actuales = {"nombre": "", "ubicacion": ""}
+    
+    def cargar_datos_puente(*args):
+        seleccion = puente_seleccionado.get()
+        if seleccion:
+            id_puente = seleccion.split(" - ")[0]
+            datos = obtener_datos_puente(id_puente)
+            if datos:
+                datos_actuales["nombre"] = datos.get("nombre_puente", "")
+                datos_actuales["ubicacion"] = datos.get("ubicacion", "")
+                entrada_nombre.delete(0, tk.END)
+                entrada_ubicacion.delete(0, tk.END)
+                entrada_nombre.insert(0, datos_actuales["nombre"])
+                entrada_ubicacion.insert(0, datos_actuales["ubicacion"])
+                
+    puente_seleccionado.trace("w", cargar_datos_puente)
+    
+    def enviar_modificacion():
+        seleccion = puente_seleccionado.get()
+        if seleccion:
+            id_puente = seleccion.split(" - ")[0]
+            nuevo_nombre = entrada_nombre.get() or datos_actuales["nombre"]
+            nueva_ubicacion = entrada_ubicacion.get() or datos_actuales["ubicacion"]
+            
+            if nuevo_nombre and nueva_ubicacion:
+                datos = {
+                    "id_puente": id_puente,
+                    "nombre_puente": nuevo_nombre,
+                    "ubicacion": nueva_ubicacion,
+                    "accion": "modificar"
+                }
+                try:
+                    respuesta = requests.post(URL_PUENTE, json=datos)
+                    if respuesta.status_code == 200:
+                        messagebox.showinfo("Éxito", "El puente se modificó correctamente.")
+                        ventana_modificar.destroy()
+                    else:
+                        messagebox.showerror("Error", f"Error en la modificación: {respuesta.status_code}")
+                except requests.exceptions.RequestException as e:
+                    messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
+            else:
+                messagebox.showwarning("Advertencia", "Completa todos los campos.")
+    
+    tk.Button(ventana_modificar, text="Guardar Cambios", command=enviar_modificacion).pack(pady=20)
 
+# Función para eliminar un puente
 def eliminar_puente():
     puentes = obtener_puentes()
-    if not puentes:
-        print("No hay puentes disponibles para eliminar.")
-        return
-
-    try:
-        print("Seleccione el puente a eliminar:")
-        for i, p in enumerate(puentes, start=1):
-            print(f"{i}. ID: {p['idPuente']} - Nombre: {p['nombre']}")
-        seleccion = int(input("Número del puente: ")) - 1
-        if seleccion < 0 or seleccion >= len(puentes):
-            raise ValueError("Selección inválida.")
-
-        id_puente = puentes[seleccion]["idPuente"]
-        confirmacion = input("¿Está seguro de que desea eliminar este puente? (s/n): ").lower()
-        if confirmacion == "s":
-            datos = {"id_puente": id_puente, "accion": "eliminar"}
-            respuesta = http_post(URL_PUENTE, datos)
-            if respuesta:
-                print("El puente se eliminó correctamente.")
-    except ValueError as e:
-        print(f"Error de selección: {e}")
-    except Exception as e:
-        print("Error inesperado:", e)
-
-def mostrar_puentes():
+    
+    ventana_eliminar = tk.Toplevel(ventana)
+    ventana_eliminar.title("Eliminar Puente")
+    ventana_eliminar.geometry("400x200")
+    tk.Label(ventana_eliminar, text="Seleccione un Puente para Eliminar:").pack(pady=5)
+    
+    puente_seleccionado = tk.StringVar()
+    opciones = [f"{p['idPuente']} - {p['nombre']}" for p in puentes]
+    menu_puentes = tk.OptionMenu(ventana_eliminar, puente_seleccionado, *opciones)
+    menu_puentes.pack(pady=5)
+    
+    def confirmar_eliminacion():
+        seleccion = puente_seleccionado.get()
+        if seleccion:
+            id_puente = seleccion.split(" - ")[0]
+            confirmacion = messagebox.askyesno("Confirmar", "¿Está seguro de que desea eliminar este puente?")
+            if confirmacion:
+                datos = {
+                    "id_puente": id_puente,
+                    "accion": "eliminar"
+                }
+                try:
+                    respuesta = requests.post(URL_PUENTE, json=datos)
+                    if respuesta.status_code == 200:
+                        messagebox.showinfo("Éxito", "El puente se eliminó correctamente.")
+                        ventana_eliminar.destroy()
+                    else:
+                        messagebox.showerror("Error", f"Error al eliminar el puente: {respuesta.status_code}")
+                except requests.exceptions.RequestException as e:
+                    messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
+    
+    tk.Button(ventana_eliminar, text="Eliminar", command=confirmar_eliminacion).pack(pady=20)
+    
+# Función para mostrar todos los puentes
+def mostrar_puente():
     puentes = obtener_puentes()
     if not puentes:
-        print("No hay puentes para mostrar.")
-    else:
-        print("Listado de Puentes:")
-        for puente in puentes:
-            print(f"ID: {puente['idPuente']}")
-            print(f"Nombre: {puente['nombre']}")
-            print(f"Ubicación: {puente['ubicacion']}")
-            print("-" * 30)
+        messagebox.showwarning("Advertencia", "No hay puentes disponibles.")
+        return
 
-# --- Funciones de Galgas ---
+    # Create display window with specified size and styling
+    ventana_mostrar_puentes = tk.Toplevel(ventana)
+    ventana_mostrar_puentes.title("Listado de Puentes")
+    ventana_mostrar_puentes.geometry("315x450")
+    ventana_mostrar_puentes.config(bg="#f8f9fa")
+
+    frame_contenido = tk.Frame(ventana_mostrar_puentes, bg="#f8f9fa")
+    frame_contenido.pack(fill="both", expand=True, padx=10, pady=10)
+
+    titulo = tk.Label(frame_contenido, text="Listado de Puentes", font=("Arial", 12, "bold"), bg="#f8f9fa")
+    titulo.pack(pady=5)
+
+    canvas = tk.Canvas(frame_contenido, bg="#f8f9fa", highlightthickness=0, width=290, height=350)
+    scroll_y = tk.Scrollbar(frame_contenido, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas, bg="#f8f9fa")
+    scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scroll_y.set)
+
+    for puente in puentes:
+        frame_puente = tk.Frame(scrollable_frame, bg="#e9ecef", bd=1, relief="solid", padx=5, pady=5)
+        frame_puente.pack(fill="x", pady=5)
+
+        tk.Label(frame_puente, text=f"ID: {puente['idPuente']}", font=("Arial", 10, "bold"), bg="#e9ecef").pack(anchor="w")
+        tk.Label(frame_puente, text=f"Nombre: {puente['nombre']}", font=("Arial", 10), bg="#e9ecef").pack(anchor="w")
+        tk.Label(frame_puente, text=f"Ubicación: {puente['ubicacion']}", font=("Arial", 10), bg="#e9ecef").pack(anchor="w")
+
+    canvas.pack(side="left", fill="both", expand=True)
+    scroll_y.pack(side="right", fill="y")
+
+#----------------------------------------------------------------------------------------------------------
 def enviar_datos_galga(ubicacion, id_puente):
-    fecha_instalacion = "{:04}-{:02}-{:02}".format(utime.localtime()[0], utime.localtime()[1], utime.localtime()[2])
+    fecha_instalacion = datetime.now().strftime("%Y-%m-%d")
     datos = {
         "ubicacion_galga": ubicacion,
         "fecha_instalacion": fecha_instalacion,
-        "id_puente": id_puente
+        "id_puente": id_puente,
+        "accion": "agregar"
     }
-    respuesta = http_post(URL_GALGA, datos)
-    if respuesta:
-        print("Éxito: Los datos de la galga se enviaron correctamente al servidor.")
+    try:
+        respuesta = requests.post(URL_GALGA, json=datos)
+        if respuesta.status_code == 200:
+            messagebox.showinfo("Éxito", "Los datos de la galga se enviaron correctamente al servidor.")
+        else:
+            messagebox.showerror("Error", f"Error en la solicitud: {respuesta.status_code}")
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
+        
+def datos_galga():
+    puentes = obtener_puentes()
+    if not puentes:
+        messagebox.showwarning("Advertencia", "No hay puentes disponibles para asignar la galga.")
+        return
+
+    ventana_galga = tk.Toplevel(ventana)
+    ventana_galga.title("Agregar Galga")
+    ventana_galga.geometry("400x250")
+    ventana_galga.config(bg="#f0f0f0")
+
+    tk.Label(ventana_galga, text="Seleccione el Puente:", bg="#f0f0f0", font=("Arial", 12)).pack(pady=10)
+    puente_seleccionado = tk.StringVar()
+    opciones_puentes = [f"{p['idPuente']} - {p['nombre']}" for p in puentes]
+    menu_puentes = tk.OptionMenu(ventana_galga, puente_seleccionado, *opciones_puentes)
+    menu_puentes.pack(pady=5)
+
+    tk.Label(ventana_galga, text="Ubicación de la Galga:", bg="#f0f0f0", font=("Arial", 12)).pack(pady=10)
+    entrada_ubicacion_galga = tk.Entry(ventana_galga, font=("Arial", 12))
+    entrada_ubicacion_galga.pack(pady=5)
+
+
+    def procesar_datos_galga():
+        seleccion = puente_seleccionado.get()
+        ubicacion = entrada_ubicacion_galga.get()
+
+        if seleccion and ubicacion:
+            id_puente = seleccion.split(" - ")[0]
+            enviar_datos_galga(ubicacion, id_puente)
+            ventana_galga.destroy()
+        else:
+            messagebox.showwarning("Advertencia", "Por favor, complete todos los campos.")
+
+    tk.Button(ventana_galga, text="Enviar", command=procesar_datos_galga, font=("Arial", 12), bg="#e6e6e6", relief=tk.RAISED).pack(pady=20)
 
 def obtener_galgas():
-    galgas = http_get(URL_GALGA)
-    if galgas:
-        return galgas
-    print("Error: No se pudo obtener la lista de galgas.")
+    try:
+        respuesta = requests.get(URL_GALGA)
+        if respuesta.status_code == 200:
+            return respuesta.json()  
+        else:
+            messagebox.showerror("Error", f"Error al obtener galgas: {respuesta.status_code}")
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
     return []
 
 def modificar_galga():
     galgas = obtener_galgas()
     if not galgas:
-        print("No hay galgas disponibles para modificar.")
+        messagebox.showwarning("Advertencia", "No hay galgas disponibles para modificar.")
         return
 
-    try:
-        print("Seleccione una Galga para Modificar:")
-        for i, galga in enumerate(galgas, start=1):
-            print(f"{i}. ID: {galga['idGalga']}, Ubicación: {galga['ubicacion']}")
-        seleccion = int(input("Seleccione el número de la galga a modificar: ")) - 1
-        if seleccion < 0 or seleccion >= len(galgas):
-            raise ValueError("Selección inválida.")
+    ventana_modificar_galga = tk.Toplevel(ventana)
+    ventana_modificar_galga.title("Modificar Galga")
+    ventana_modificar_galga.geometry("400x300")
+    ventana_modificar_galga.config(bg="#f0f0f0")
 
-        id_galga = galgas[seleccion]['idGalga']
-        galga_actual = galgas[seleccion]["ubicacion"]
-        fecha_actual = galgas[seleccion]["fecha_instalacion"]
+    tk.Label(ventana_modificar_galga, text="Seleccione una Galga:", bg="#f0f0f0", font=("Arial", 12)).pack(pady=10)
+    galga_seleccionada = tk.StringVar()
+    opciones_galgas = [f"{g['idGalga']} - {g['ubicacion']}" for g in galgas]
+    menu_galgas = tk.OptionMenu(ventana_modificar_galga, galga_seleccionada, *opciones_galgas)
+    menu_galgas.pack(pady=5)
 
-        nueva_ubicacion = input(f"Nueva Ubicación de la Galga (actual: {galga_actual}): ").strip() or galga_actual
-        nueva_fecha_instalacion = input(f"Nueva Fecha de Instalación (actual: {fecha_actual}): ").strip() or fecha_actual
+    tk.Label(ventana_modificar_galga, text="Nueva Ubicación:", bg="#f0f0f0", font=("Arial", 12)).pack(pady=10)
+    entrada_ubicacion = tk.Entry(ventana_modificar_galga, font=("Arial", 12))
+    entrada_ubicacion.pack(pady=5)
 
-        datos = {
-            "id_galga": id_galga,
-            "ubicacion_galga": nueva_ubicacion,
-            "fecha_instalacion": nueva_fecha_instalacion,
-            "accion": "modificar"
-        }
-        respuesta = http_post(URL_GALGA, datos)
-        if respuesta:
-            print("Éxito: La galga se modificó correctamente.")
-    except ValueError as e:
-        print(f"Error de selección: {e}")
-    except Exception as e:
-        print("Error inesperado:", e)
-        
+    tk.Label(ventana_modificar_galga, text="Nueva Fecha de Instalación (YYYY-MM-DD):", bg="#f0f0f0", font=("Arial", 12)).pack(pady=10)
+    entrada_fecha_instalacion = tk.Entry(ventana_modificar_galga, font=("Arial", 12))
+    entrada_fecha_instalacion.pack(pady=5)
+
+    datos_actuales = {"ubicacion": "", "fecha_instalacion": ""}
+
+    def cargar_datos_galga(*args):
+        seleccion = galga_seleccionada.get()
+        if seleccion:
+            id_galga = seleccion.split(" - ")[0]
+            galga = next((g for g in galgas if g['idGalga'] == id_galga), None)
+            if galga:
+                datos_actuales["ubicacion"] = galga["ubicacion"]
+                datos_actuales["fecha_instalacion"] = galga["fecha_instalacion"]
+                entrada_ubicacion.delete(0, tk.END)
+                entrada_fecha_instalacion.delete(0, tk.END)
+                entrada_ubicacion.insert(0, datos_actuales["ubicacion"])
+                entrada_fecha_instalacion.insert(0, datos_actuales["fecha_instalacion"])
+
+    galga_seleccionada.trace("w", cargar_datos_galga)
+
+    def enviar_modificacion_galga():
+        seleccion = galga_seleccionada.get()
+        if seleccion:
+            id_galga = seleccion.split(" - ")[0]
+            nueva_ubicacion = entrada_ubicacion.get() or datos_actuales["ubicacion"]
+            nueva_fecha_instalacion = entrada_fecha_instalacion.get() or datos_actuales["fecha_instalacion"]
+
+            if nueva_ubicacion and nueva_fecha_instalacion:
+                datos = {
+                    "id_galga": id_galga,
+                    "ubicacion_galga": nueva_ubicacion,
+                    "fecha_instalacion": nueva_fecha_instalacion,
+                    "accion": "modificar"
+                }
+                try:
+                    respuesta = requests.post(URL_GALGA, json=datos)
+                    if respuesta.status_code == 200:
+                        messagebox.showinfo("Éxito", "La galga se modificó correctamente.")
+                        ventana_modificar_galga.destroy()
+                    else:
+                        messagebox.showerror("Error", f"Error en la modificación: {respuesta.status_code}")
+                except requests.exceptions.RequestException as e:
+                    messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
+            else:
+                messagebox.showwarning("Advertencia", "Completa todos los campos.")
+
+    tk.Button(ventana_modificar_galga, text="Guardar Cambios", command=enviar_modificacion_galga, font=("Arial", 12), bg="#e6e6e6", relief=tk.RAISED).pack(pady=20)
+
 def eliminar_galga():
     galgas = obtener_galgas()
     if not galgas:
-        print("No hay galgas disponibles para eliminar.")
+        messagebox.showwarning("Advertencia", "No hay galgas disponibles para eliminar.")
         return
 
-    print("Seleccione una Galga para Eliminar:")
-    for i, galga in enumerate(galgas, start=1):
-        print(f"{i}. ID: {galga['idGalga']}, Ubicación: {galga['ubicacion']}")
-    
-    seleccion = int(input("Seleccione el número de la galga a eliminar: ")) - 1
-    id_galga = galgas[seleccion]['idGalga']
-    
-    confirmacion = input("¿Está seguro de que desea eliminar esta galga? (s/n): ")
-    if confirmacion.lower() == 's':
-        datos = {
-            "id_galga": id_galga,
-            "accion": "eliminar"
-        }
-        headers = {'Content-Type': 'application/json'}
-        try:
-            respuesta = requests.post(URL_GALGA, data=ujson.dumps(datos).encode('utf-8'), headers=headers)
-            if respuesta.status_code == 200:
-                print("Éxito: La galga se eliminó correctamente.")
-            else:
-                print(f"Error al eliminar la galga: {respuesta.status_code}")
-        except Exception as e:
-            print("Error de conexión:", e)
+    ventana_eliminar_galga = tk.Toplevel(ventana)
+    ventana_eliminar_galga.title("Eliminar Galga")
+    ventana_eliminar_galga.geometry("400x200")
+    ventana_eliminar_galga.config(bg="#f0f0f0")
 
-def mostrar_galgas():
+    tk.Label(ventana_eliminar_galga, text="Seleccione una Galga para Eliminar:", bg="#f0f0f0", font=("Arial", 12)).pack(pady=10)
+    galga_seleccionada = tk.StringVar()
+    opciones_galgas = [f"{g['idGalga']} - {g['ubicacion']}" for g in galgas]
+    menu_galgas = tk.OptionMenu(ventana_eliminar_galga, galga_seleccionada, *opciones_galgas)
+    menu_galgas.pack(pady=5)
+
+    def confirmar_eliminacion_galga():
+        seleccion = galga_seleccionada.get()
+        if seleccion:
+            id_galga = seleccion.split(" - ")[0]
+            confirmacion = messagebox.askyesno("Confirmación", "¿Está seguro de que desea eliminar esta galga?")
+            if confirmacion:
+                datos = {
+                    "id_galga": id_galga,
+                    "accion": "eliminar"
+                }
+                try:
+                    respuesta = requests.post(URL_GALGA, json=datos)
+                    if respuesta.status_code == 200:
+                        messagebox.showinfo("Éxito", "La galga se eliminó correctamente.")
+                        ventana_eliminar_galga.destroy()
+                    else:
+                        messagebox.showerror("Error", f"Error al eliminar la galga: {respuesta.status_code}")
+                except requests.exceptions.RequestException as e:
+                    messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
+        else:
+            messagebox.showwarning("Advertencia", "Por favor, seleccione una galga.")
+
+    tk.Button(ventana_eliminar_galga, text="Eliminar", command=confirmar_eliminacion_galga, font=("Arial", 12), bg="#e6e6e6", relief=tk.RAISED).pack(pady=20)
+
+def mostrar_galga():
     galgas = obtener_galgas()
     if not galgas:
-        print("No hay galgas disponibles.")
+        messagebox.showwarning("Advertencia", "No hay galgas disponibles.")
         return
-    
-    print("Listado de Galgas:")
+    ventana_mostrar_galgas = tk.Toplevel(ventana)
+    ventana_mostrar_galgas.title("Listado de Galgas")
+    ventana_mostrar_galgas.geometry("315x450")
+    ventana_mostrar_galgas.config(bg="#f8f9fa")
+
+    frame_contenido = tk.Frame(ventana_mostrar_galgas, bg="#f8f9fa")
+    frame_contenido.pack(fill="both", expand=True, padx=10, pady=10)
+
+    titulo = tk.Label(frame_contenido, text="Listado de Galgas", font=("Arial", 14, "bold"), bg="#f8f9fa")
+    titulo.pack(pady=5)
+
+    canvas = tk.Canvas(frame_contenido, bg="#f8f9fa", highlightthickness=0, width=290, height=350)
+    scroll_y = tk.Scrollbar(frame_contenido, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas, bg="#f8f9fa")
+    scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scroll_y.set)
+
     for galga in galgas:
-        print(f"ID: {galga['idGalga']}")
-        print(f"Ubicación: {galga['ubicacion']}")
-        print(f"Fecha de Instalación: {galga['fecha_instalacion']}")
-        print("-" * 30)
-        
-# --- Funciones de Servidor para datos ---
-NTaylor = 1
-angle = 0  # Ángulo en grados
+        frame_galga = tk.Frame(scrollable_frame, bg="#e9ecef", bd=1, relief="solid")
+        frame_galga.pack(fill="x", pady=5, padx=5)
 
-def calculate_cos_taylor(x, n):
-    result = 1
-    sign = -1
-    factorial = 1
-    power = x * x
-    for i in range(1, n):
-        factorial *= (2 * i) * (2 * i - 1)
-        result += sign * power / factorial
-        power *= x * x
-        sign *= -1
-    return result
+        tk.Label(frame_galga, text=f"ID: {galga['idGalga']}", font=("Arial", 11, "bold"), bg="#e9ecef").pack(anchor="w", padx=10, pady=2)
+        tk.Label(frame_galga, text=f"Ubicación: {galga['ubicacion']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
+        tk.Label(frame_galga, text=f"Fecha de Instalación: {galga['fecha_instalacion']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
 
-def obtener_galgas_puente(id_puente):
+    canvas.pack(side="left", fill="both", expand=True)
+    scroll_y.pack(side="left", fill="y")
+#-----------------------------------------------------------------------------------------------------------------------
+def obtener_datos():
     try:
-        response = requests.get(f"{URL_DATOS}?idPuente={id_puente}")
-        if response.status_code == 200:
-            return response.json()  # Intentar decodificar como JSON
+        respuesta = requests.get(URL_DATOS)
+        if respuesta.status_code == 200:
+            return respuesta.json()  
         else:
-            print("Error al obtener galgas:", response.status_code)
-            return []
-    except Exception as e:
-        print("Error de conexión:", e)
-        return []
-
-# Seleccionar el puente y la galga
-def seleccionar_puente_y_galga():
-    # Obtener la lista de puentes
-    puentes = obtener_puentes()
-    if not puentes:
-        print("No se encontraron puentes.")
-        return None, None
-
-    print("Lista de Puentes:")
-    for puente in puentes:
-        print(f"{puente['idPuente']} - {puente['nombre']}")
-
-    id_puente = input("Seleccione el ID del puente: ").strip()
-
-    # Obtener la lista de galgas para el puente seleccionado
-    galgas = obtener_galgas_puente(id_puente)
-    if not galgas:
-        print("No se encontraron galgas para el puente seleccionado.")
-        return None, None
-
-    print("Lista de Galgas:")
-    for galga in galgas:
-        print(f"{galga['idGalga']} - {galga['ubicacion']}")
-
-    id_galga = input("Seleccione el ID de la galga: ").strip()
-    return id_puente, id_galga
-
-def obtener_fecha_hora():
-    tm = utime.localtime()
-    return "{:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(tm[0], tm[1], tm[2], tm[3], tm[4], tm[5])
-
-# Bucle principal para generar datos y enviarlos
-def enviar_datos(id_puente, id_galga):
-    global NTaylor, angle
-    while True:
-        # Configurar el ángulo en radianes
-        angle_rad = math.radians(angle)
-
-        # Calcular coseno con Taylor y trigonométrico
-        cos_taylor_value = calculate_cos_taylor(angle_rad, NTaylor)  # Aproximación con Taylor
-        cos_trig_value = math.cos(angle_rad)                         # Valor exacto usando math.cos
-        error_value = abs(cos_taylor_value - cos_trig_value)         # Error absoluto
-        fecha_actual = obtener_fecha_hora()
-        # Crear el JSON para enviar
-        data = {
-            "idGalga": id_galga,
-            "Cos_Taylor": cos_taylor_value,
-            "Cos_Trig":cos_trig_value,
-            "Error":error_value,
-            "Fecha": fecha_actual
-        }
-        headers = {'Content-Type': 'application/json'}
-        try:
-            response = requests.post(URL_DATOS, data=ujson.dumps(data), headers=headers)
-            print("Ángulo:", angle, "Data:", data)
-            print("Respuesta del servidor:", response.text)
-            response.close()
-        except Exception as e:
-            print("Error al enviar datos:", e)
-
-        # Incrementar ángulo de 0 a 360
-        NTaylor += 1
-        angle = (angle + 1) % 360  # Incrementa en 1 grado, reinicia a 0 después de 360
-
-        # Pausar entre envíos
-        time.sleep(1)  # Pausa de 1 segundo entre envíos para evitar envíos rápidos
-
-def obtener_datos_lectura():
-    try:
-        response = requests.get(URL_DATOS)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            print(f"Error al obtener datos: {response.status_code}")
-            return []
-    except Exception as e:
-        print("Error de conexión:", e)
+            messagebox.showerror("Error", f"Error al obtener datos: {respuesta.status_code}")
+    except requests.exceptions.RequestException as e:
+        messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
     return []
 
 def modificar_dato():
-    datos = obtener_datos_lectura()
+    datos = obtener_datos()
     if not datos:
-        print("No hay Datos disponibles para modificar.")
+        messagebox.showwarning("Advertencia", "No hay datos disponibles para modificar.")
         return
 
-    print("Seleccione el dato a modificar:")
-    for i, p in enumerate(datos, start=1):
-        print(f"{i}. ID: {p['idDato']} - Cos Taylor: {p['Cos_Taylor']} - Cos Trig: {p['Cos_Trig']} - Error: {p['Error']} - Fecha Hora: {p['fecha_hora']}")
-    seleccion = int(input("Número del dato: ")) - 1
+    ventana_modificar_dato = tk.Toplevel(ventana)
+    ventana_modificar_dato.title("Modificar Dato")
+    ventana_modificar_dato.geometry("400x400")
+    ventana_modificar_dato.config(bg="#f8f9fa")
 
-    id_dato = datos[seleccion]["idDato"]
-    taylor_actual = datos[seleccion]["Cos_Taylor"]
-    trig_actual = datos[seleccion]["Cos_Trig"]
-    error_actual = datos[seleccion]["Error"]
+    tk.Label(ventana_modificar_dato, text="Modificar Dato", font=("Arial", 14, "bold"), bg="#f8f9fa").pack(pady=10)
 
-    nuevo_taylor = input(f"Nuevo valor Taylor (actual: {taylor_actual}): ") or taylor_actual
-    nuevo_trig = input(f"Nuevo valor Trig (actual: {trig_actual}): ") or trig_actual
-    nuevo_error = input(f"Nuevo valor Error (actual: {error_actual}): ") or error_actual
+    tk.Label(ventana_modificar_dato, text="Seleccione el Dato:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
+    dato_seleccionado = tk.StringVar()
+    opciones_datos = [
+        f"{p['idDato']} - Cos Taylor: {p['Cos_Taylor']} - Cos Trig: {p['Cos_Trig']} - Error: {p['Error']} - Fecha: {p['fecha_hora']}"
+        for p in datos
+    ]
+    menu_datos = tk.OptionMenu(ventana_modificar_dato, dato_seleccionado, *opciones_datos)
+    menu_datos.pack(pady=5)
 
-    datos = {
-        "id_dato": id_dato,
-        "nuevo_taylor": nuevo_taylor,
-        "nuevo_trig": nuevo_trig,
-        "nuevo_error": nuevo_error
-    }
-    headers = {'Content-Type': 'application/json'}
-    try:
-        respuesta = requests.post(URL_DATOS, data=ujson.dumps(datos).encode('utf-8'), headers=headers)
-        if respuesta.status_code == 200:
-            print("El dato se modificó correctamente.")
-        else:
-            print(f"Error en la modificación: {respuesta.status_code}")
-    except requests.exceptions.RequestException as e:
-        print(f"No se pudo conectar con el servidor: {e}")
+    tk.Label(ventana_modificar_dato, text="Nuevo valor Taylor:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
+    entrada_taylor = tk.Entry(ventana_modificar_dato, font=("Arial", 12))
+    entrada_taylor.pack(pady=5)
 
-        
-def mostrar_datos():
-    datos = obtener_datos_lectura()
-    if not datos:
-        print("No hay datos para mostrar.")
-    else:
-        print("Listado de Datos:")
-        for dato in datos:
-            print(f" ID: {dato['idDato']} - Cos Taylor: {dato['Cos_Taylor']} - Cos Trig: {dato['Cos_Trig']} - Error: {dato['Error']} - Fecha Hora: {dato['fecha_hora']} -  idGalga: {dato['idGalga']}")
-            
-def eliminar_dato():
-    datos = obtener_datos_lectura()
-    if not datos:
-        print("No hay datos disponibles para eliminar.")
-        return
+    tk.Label(ventana_modificar_dato, text="Nuevo valor Trig:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
+    entrada_trig = tk.Entry(ventana_modificar_dato, font=("Arial", 12))
+    entrada_trig.pack(pady=5)
 
-    print("Seleccione el dato a eliminar:")
-    for i, p in enumerate(datos, start=1):
-        print(f"{i}. ID: {p['idDato']} - Cos Taylor: {p['Cos_Taylor']} - Cos Trig: {p['Cos_Trig']} - Error: {p['Error']} - Fecha Hora: {p['fecha_hora']}")
-    seleccion = int(input("Número del dato: ")) - 1
+    tk.Label(ventana_modificar_dato, text="Nuevo valor Error:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
+    entrada_error = tk.Entry(ventana_modificar_dato, font=("Arial", 12))
+    entrada_error.pack(pady=5)
 
-    id_dato = datos[seleccion]["idDato"]
+    datos_actuales = {"Cos_Taylor": "", "Cos_Trig": "", "Error": ""}
 
-    confirmacion = input("¿Está seguro de que desea eliminar este dato? (s/n): ").lower()
-    if confirmacion == "s":
-        datos = {
-            "id_dato": id_dato,
-            "accion": "eliminar"
-        }
-        headers = {'Content-Type': 'application/json'}
-        try:
-            respuesta = requests.post(URL_DATOS, data=ujson.dumps(datos).encode('utf-8'), headers=headers)
-            if respuesta.status_code == 200:
-                print("El dato se eliminó correctamente.")
-            else:
-                print(f"Error al eliminar el puente: {respuesta.status_code}")
-        except requests.exceptions.RequestException as e:
-            print(f"No se pudo conectar con el servidor: {e}")
-# Submenú para gestionar Puentes
-def menu_puentes():
-    while True:
-        print("\nOpciones de Puente")
-        print("1. Agregar Puente")
-        print("2. Modificar Puente")
-        print("3. Eliminar Puente")
-        print("4. Mostrar Puentes")
-        print("5. Volver al Menú Principal")
-        
-        opcion = input("Seleccione una opción: ")
-        
-        if opcion == '1':
-            nombre_puente = input("Ingrese el Nombre del Puente: ")
-            ubicacion = input("Ingrese la Ubicación: ")
-            if nombre_puente and ubicacion:
-                enviar_datos_al_servidor(ubicacion, nombre_puente)
-            else:
-                print("Error: Por favor, complete todos los campos.")
-        
-        elif opcion == '2':
-            modificar_puente()
-        
-        elif opcion == '3':
-            eliminar_puente()
-        
-        elif opcion == '4':
-            mostrar_puentes()
-        
-        elif opcion == '5':
-            break
-        
-        else:
-            print("Opción no válida. Intente de nuevo.")
+    def cargar_datos_dato(*args):
+        seleccion = dato_seleccionado.get()
+        if seleccion:
+            id_dato = seleccion.split(" - ")[0]
+            dato = next((p for p in datos if str(p['idDato']) == id_dato), None)
+            if dato:
+                datos_actuales["Cos_Taylor"] = dato["Cos_Taylor"]
+                datos_actuales["Cos_Trig"] = dato["Cos_Trig"]
+                datos_actuales["Error"] = dato["Error"]
 
-# Submenú para gestionar Galgas
-def menu_galgas():
-    while True:
-        print("\nOpciones de Galga")
-        print("1. Agregar Galga")
-        print("2. Modificar Galga")
-        print("3. Eliminar Galga")
-        print("4. Mostrar Galgas")
-        print("5. Volver al Menú Principal")
-        
-        opcion = input("Seleccione una opción: ")
-        
-        if opcion == '1':
-            puentes = obtener_puentes()
-            if not puentes:
-                print("No hay puentes disponibles para asignar la galga.")
-            else:
-                print("Seleccione el Puente donde desea agregar la galga:")
-                for i, puente in enumerate(puentes, start=1):
-                    print(f"{i}. ID: {puente['idPuente']}, Nombre: {puente['nombre']}")
-                
-                seleccion = int(input("Seleccione el número del puente: ")) - 1
-                id_puente = puentes[seleccion]['idPuente']
-                
-                ubicacion = input("Ingrese la Ubicación de la Galga: ")
-                
-                if ubicacion:
-                    enviar_datos_galga(ubicacion, id_puente)
+                entrada_taylor.delete(0, tk.END)
+                entrada_taylor.insert(0, datos_actuales["Cos_Taylor"])
+
+                entrada_trig.delete(0, tk.END)
+                entrada_trig.insert(0, datos_actuales["Cos_Trig"])
+
+                entrada_error.delete(0, tk.END)
+                entrada_error.insert(0, datos_actuales["Error"])
+
+    dato_seleccionado.trace("w", cargar_datos_dato)
+
+    def enviar_modificacion_dato():
+        seleccion = dato_seleccionado.get()
+        if seleccion:
+            id_dato = seleccion.split(" - ")[0]
+            nuevo_taylor = entrada_taylor.get() or datos_actuales["Cos_Taylor"]
+            nuevo_trig = entrada_trig.get() or datos_actuales["Cos_Trig"]
+            nuevo_error = entrada_error.get() or datos_actuales["Error"]
+
+            datos_modificados = {
+                "id_dato": id_dato,
+                "nuevo_taylor": nuevo_taylor,
+                "nuevo_trig": nuevo_trig,
+                "nuevo_error": nuevo_error,
+                "accion": "modificar"
+            }
+            try:
+                respuesta = requests.post(URL_DATOS, json=datos_modificados)
+                if respuesta.status_code == 200:
+                    messagebox.showinfo("Éxito", "El dato se modificó correctamente.")
+                    ventana_modificar_dato.destroy()
                 else:
-                    print("Error: Por favor, complete todos los campos.")
-        elif opcion == '2':
-            modificar_galga()
-        
-        elif opcion == '3':
-            eliminar_galga()
-        
-        elif opcion == '4':
-            mostrar_galgas()
-        
-        elif opcion == '5':
-            break
-        
+                    messagebox.showerror("Error", f"Error en la modificación: {respuesta.status_code}")
+            except requests.exceptions.RequestException as e:
+                messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
         else:
-            print("Opción no válida. Intente de nuevo.")
+            messagebox.showwarning("Advertencia", "Por favor, seleccione un dato.")
 
-# Submenú para gestionar Datos (si es necesario implementar)
-def menu_datos():
-    while True:
-        print("\nOpciones de Galga")
-        print("1. Agregar Dato")
-        print("2. Modificar Dato")
-        print("3. Eliminar Dato")
-        print("4. Mostrar Datos")
-        print("5. Volver al Menú Principal")
-        
-        opcion = input("Seleccione una opción: ")
-        
-        if opcion == '1':
-            id_puente, id_galga = seleccionar_puente_y_galga()
-            if id_puente and id_galga:
-                enviar_datos(id_puente, id_galga)
-            else:
-                print("Selección de puente o galga inválida. Terminando programa.")
-        elif opcion == '2':
-            modificar_dato()
-        
-        elif opcion == '3':
-            eliminar_dato()
-        
-        elif opcion == '4':
-            mostrar_datos()
-        
-        elif opcion == '5':
-            break
-        
+    tk.Button(ventana_modificar_dato, text="Guardar Cambios", command=enviar_modificacion_dato, font=("Arial", 12), bg="#e6e6e6", relief=tk.RAISED).pack(pady=20)
+
+def eliminar_dato():
+    datos = obtener_datos()
+    if not datos:
+        messagebox.showwarning("Advertencia", "No hay datos disponibles para eliminar.")
+        return
+
+    ventana_eliminar_dato = tk.Toplevel(ventana)
+    ventana_eliminar_dato.title("Eliminar Dato")
+    ventana_eliminar_dato.geometry("400x300")
+    ventana_eliminar_dato.config(bg="#f8f9fa")
+
+    tk.Label(ventana_eliminar_dato, text="Eliminar Dato", font=("Arial", 14, "bold"), bg="#f8f9fa").pack(pady=10)
+
+    tk.Label(ventana_eliminar_dato, text="Seleccione el Dato a Eliminar:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
+    dato_seleccionado = tk.StringVar()
+    opciones_datos = [
+        f"{p['idDato']} - Cos Taylor: {p['Cos_Taylor']} - Cos Trig: {p['Cos_Trig']} - Error: {p['Error']} - Fecha: {p['fecha_hora']}"
+        for p in datos
+    ]
+    menu_datos = tk.OptionMenu(ventana_eliminar_dato, dato_seleccionado, *opciones_datos)
+    menu_datos.pack(pady=10)
+
+    def confirmar_eliminacion_dato():
+        seleccion = dato_seleccionado.get()
+        if seleccion:
+            id_dato = seleccion.split(" - ")[0]
+            confirmacion = messagebox.askyesno("Confirmación", "¿Está seguro de que desea eliminar este dato?")
+            if confirmacion:
+                datos_a_enviar = {
+                    "id_dato": id_dato,
+                    "accion": "eliminar"
+                }
+                try:
+                    respuesta = requests.post(URL_DATOS, json=datos_a_enviar)
+                    if respuesta.status_code == 200:
+                        messagebox.showinfo("Éxito", "El dato se eliminó correctamente.")
+                        ventana_eliminar_dato.destroy()
+                    else:
+                        messagebox.showerror("Error", f"Error al eliminar el dato: {respuesta.status_code}")
+                except requests.exceptions.RequestException as e:
+                    messagebox.showerror("Error", f"No se pudo conectar con el servidor: {e}")
         else:
-            print("Opción no válida. Intente de nuevo.")
+            messagebox.showwarning("Advertencia", "Por favor, seleccione un dato.")
 
-# Menú principal para seleccionar entre Puentes, Galgas o Datos
-def menu_principal():
-    while True:
-        print("\nSeleccione la entidad que desea gestionar:")
-        print("1. Puentes")
-        print("2. Galgas")
-        print("3. Datos")
-        print("4. Salir")
-        
-        opcion = input("Seleccione una opción: ")
-        
-        if opcion == '1':
-            menu_puentes()
-        
-        elif opcion == '2':
-            menu_galgas()
-        
-        elif opcion == '3':
-            menu_datos()
-        
-        elif opcion == '4':
-            print("Saliendo del programa.")
-            break
-        
-        else:
-            print("Opción no válida. Intente de nuevo.")
+    tk.Button(ventana_eliminar_dato, text="Eliminar", command=confirmar_eliminacion_dato, font=("Arial", 12), bg="#e6e6e6", relief=tk.RAISED).pack(pady=20)
 
-# Ejecutar el menú principal
-try:
-    wifi_init()
-    menu_principal()
-except Exception as e:
-    print("Error en la ejecución del programa:", e)
+def mostrar_dato():
+    datos = obtener_datos()
+    if not datos:
+        messagebox.showwarning("Advertencia", "No hay datos para mostrar.")
+        return
+
+    ventana_mostrar_datos = tk.Toplevel(ventana)
+    ventana_mostrar_datos.title("Listado de Datos")
+    ventana_mostrar_datos.geometry("315x450")
+    ventana_mostrar_datos.config(bg="#f8f9fa")
+
+    frame_contenido = tk.Frame(ventana_mostrar_datos, bg="#f8f9fa")
+    frame_contenido.pack(fill="both", expand=True, padx=10, pady=10)
+
+    titulo = tk.Label(frame_contenido, text="Listado de Datos", font=("Arial", 14, "bold"), bg="#f8f9fa")
+    titulo.pack(pady=5)
+
+    canvas = tk.Canvas(frame_contenido, bg="#f8f9fa", highlightthickness=0, width=290, height=350)
+    scroll_y = tk.Scrollbar(frame_contenido, orient="vertical", command=canvas.yview)
+    scrollable_frame = tk.Frame(canvas, bg="#f8f9fa")
+    scrollable_frame.bind("<Configure>", lambda e: canvas.configure(scrollregion=canvas.bbox("all")))
+
+    canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
+    canvas.configure(yscrollcommand=scroll_y.set)
+
+    for dato in datos:
+        frame_dato = tk.Frame(scrollable_frame, bg="#e9ecef", bd=1, relief="solid", padx=5, pady=5)
+        frame_dato.pack(fill="x", pady=5)
+
+        tk.Label(frame_dato, text=f"ID: {dato['idDato']}", font=("Arial", 11, "bold"), bg="#e9ecef").pack(anchor="w")
+        tk.Label(frame_dato, text=f"Cos Taylor: {dato['Cos_Taylor']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
+        tk.Label(frame_dato, text=f"Cos Trig: {dato['Cos_Trig']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
+        tk.Label(frame_dato, text=f"Error: {dato['Error']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
+        tk.Label(frame_dato, text=f"Fecha Hora: {dato['fecha_hora']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
+        tk.Label(frame_dato, text=f"idGalga: {dato['idGalga']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
+
+    canvas.pack(side="left", fill="both", expand=True)
+    scroll_y.pack(side="right", fill="y")
+
+#-----------------------------------------------------------------------------------------------------------------------
+def abrir_ventana_puente():
+    ventana_puente = tk.Toplevel(ventana)
+    ventana_puente.title("Opciones de Puente")
+    ventana_puente.geometry("300x250")
+    ventana_puente.config(bg="#f0f0f0")
+    ventana_puente.resizable(False, False)
+    # Definir estilo de los botones
+    button_style = {
+        "font": ("Arial", 12),
+        "bg": "#e6e6e6",
+        "relief": tk.RAISED,
+        "bd": 2,
+        "width": 15,
+        "height": 2
+    }
+    
+    botones = [
+        ("Agregar Puente", datos_puente),
+        ("Modificar Puente", modificar_puente),
+        ("Eliminar Puente", eliminar_puente),
+        ("Mostrar Puente", mostrar_puente)
+    ]
+    for i, (text, command) in enumerate(botones):
+        tk.Button(ventana_puente, text=text, command=command, **button_style).place(relx=0.5, rely=0.2 + i * 0.2, anchor="center")
+
+def abrir_ventana_galga():
+    ventana_galga = tk.Toplevel(ventana)
+    ventana_galga.title("Opciones de Galga")
+    ventana_galga.geometry("300x250")
+    ventana_galga.config(bg="#f0f0f0")
+    ventana_galga.resizable(False, False)
+    # Definir estilo de los botones
+    button_style = {
+        "font": ("Arial", 12),
+        "bg": "#e6e6e6",
+        "relief": tk.RAISED,
+        "bd": 2,
+        "width": 15,
+        "height": 2
+    }
+    
+    botonesg = [
+        ("Agregar Galga", datos_galga),
+        ("Modificar Galga", modificar_galga),
+        ("Eliminar Galga", eliminar_galga),
+        ("Mostrar Galga", mostrar_galga)
+    ]
+    for i, (text, command) in enumerate(botonesg):
+        tk.Button(ventana_galga, text=text, command=command, **button_style).place(relx=0.5, rely=0.2 + i * 0.2, anchor="center")
+
+
+def abrir_ventana_datos():
+    ventana_datos = tk.Toplevel(ventana)
+    ventana_datos.title("Opciones de Datos")
+    ventana_datos.geometry("300x250")
+    ventana_datos.resizable(False, False)
+    # Definir estilo de los botones
+    button_style = {
+        "font": ("Arial", 12),
+        "bg": "#e6e6e6",
+        "relief": tk.RAISED,
+        "bd": 2,
+        "width": 15,
+        "height": 2
+    }
+    
+    botonesd = [
+        ("Modificar Dato", modificar_dato),
+        ("Eliminar Dato", eliminar_dato),
+        ("Mostrar Dato", mostrar_dato)
+    ]
+    for i, (text, command) in enumerate(botonesd):
+        tk.Button(ventana_datos, text=text, command=command, **button_style).place(relx=0.5, rely=0.2 + i * 0.2, anchor="center")
+# Configuración de la ventana principal
+ventana = tk.Tk()
+ventana.title("Interfaz ABM")
+ventana.geometry("300x250")
+ventana.config(bg="#f0f0f0")
+ventana.resizable(False, False)
+# Definir estilo de los botones
+button_style = {
+    "font": ("Arial", 12, "bold"),
+    "bg": "#e6e6e6",
+    "relief": tk.RAISED,
+    "bd": 2,
+    "width": 15,
+    "height": 2
+}
+# Colocar los botones centrados en la ventana principal
+tk.Button(ventana, text="Puente", command=abrir_ventana_puente, **button_style).place(relx=0.5, rely=0.25, anchor="center")
+tk.Button(ventana, text="Galga", command=abrir_ventana_galga, **button_style).place(relx=0.5, rely=0.5, anchor="center")
+tk.Button(ventana, text="Datos", command=abrir_ventana_datos, **button_style).place(relx=0.5, rely=0.75, anchor="center")
+ventana.mainloop()

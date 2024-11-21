@@ -1,5 +1,5 @@
 <?php
-$conexion = new mysqli("192.168.0.13", "Dp", "", "puentesDB");
+$conexion = new mysqli("localhost", "root", "", "puentesDB");
 
 if ($conexion->connect_error) {
     die("Conexión fallida: " . $conexion->connect_error);
@@ -34,15 +34,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET['idPuente'])) {
 
     // Validar y asignar los datos
     $idGalga = isset($data['idGalga']) ? (int)$data['idGalga'] : 0;
-    $cosTaylor = isset($data['Cos_Taylor']) ? (float)$data['Cos_Taylor'] : 0.0;
-    $cosTrig = isset($data['Cos_Trig']) ? (float)$data['Cos_Trig'] : 0.0;
-    $error = isset($data['Error']) ? (float)$data['Error'] : 0.0;
+    $peso = isset($data['Peso']) ? (float)$data['Peso'] : 0.0;
     $fecha = isset($data['Fecha']) ? $conexion->real_escape_string($data['Fecha']) : date('Y-m-d H:i:s');
 
     // Verificar y realizar la inserción si los datos son válidos
     if ($idGalga) {
-        $stmt = $conexion->prepare("INSERT INTO datos_de_lectura (Cos_Taylor, Cos_Trig, Error, fecha_hora, idGalga) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("dddsd", $cosTaylor, $cosTrig, $error, $fecha, $idGalga);
+        $stmt = $conexion->prepare("INSERT INTO datos_de_lectura (Peso, fecha_hora, idGalga) VALUES (?, ?, ?)");
+        $stmt->bind_param("dsd", $peso, $fecha, $idGalga);
         
         if ($stmt->execute()) {
             echo json_encode(["success" => "Datos insertados correctamente."]);
