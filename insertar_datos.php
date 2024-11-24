@@ -35,12 +35,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET['idPuente'])) {
     // Validar y asignar los datos
     $idGalga = isset($data['idGalga']) ? (int)$data['idGalga'] : 0;
     $peso = isset($data['Peso']) ? (float)$data['Peso'] : 0.0;
+    $io = isset($data['IoThing']) ? (string)$data['IoThing'] : '';
     $fecha = isset($data['Fecha']) ? $conexion->real_escape_string($data['Fecha']) : date('Y-m-d H:i:s');
 
     // Verificar y realizar la inserción si los datos son válidos
     if ($idGalga) {
-        $stmt = $conexion->prepare("INSERT INTO datos_de_lectura (Peso, fecha_hora, idGalga) VALUES (?, ?, ?)");
-        $stmt->bind_param("dsd", $peso, $fecha, $idGalga);
+        $stmt = $conexion->prepare("INSERT INTO datos_de_lectura (peso, iothing, fecha_hora, idGalga) VALUES (?, ?, ?, ?)");
+        $stmt->bind_param("dssd", $peso, $io, $fecha, $idGalga);
         
         if ($stmt->execute()) {
             echo json_encode(["success" => "Datos insertados correctamente."]);

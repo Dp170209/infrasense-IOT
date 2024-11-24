@@ -19,7 +19,7 @@ wifi_init()
 class Board:
     class BoardType:
         PICO_W = 'Raspberry Pi Pico W'
-        ESP32 = 'ESP32'
+        ESP32 = 'ESP32-9'
         UNKNOWN = 'Unknown'
 
     def __init__(self):
@@ -68,7 +68,7 @@ BOARD_TYPE = Board().type
 print("Tarjeta Detectada:", BOARD_TYPE)
 
 # Configuración inicial
-url = "http://172.20.10.13/infrasense-IOT/insertar_datos.php"  # Reemplaza con la URL correcta
+url = "http://192.168.0.15/infrasense-IOT/insertar_datos.php"  # Reemplaza con la URL correcta
 
 # Función para obtener la lista de puentes
 def obtener_puentes():
@@ -134,13 +134,19 @@ def enviar_datos(id_puente, id_galga, hx711, offset, scale):
     while True:
         # Leer el peso desde HX711
         weight = hx711.read_weight(offset, scale)
+        
+        # Validar si el peso es negativo
+        if weight < 0:
+            weight = 0  # Si es negativo, asignar 0
+
         fecha_actual = obtener_fecha_hora()
 
         # Crear el JSON para enviar
         data = {
             "idGalga": id_galga,
             "Peso": weight,
-            "Fecha": fecha_actual
+            "Fecha": fecha_actual,
+            "IoThing": BOARD_TYPE
         }
 
         # Convertir el JSON en una cadena y enviarlo al servidor
@@ -154,7 +160,7 @@ def enviar_datos(id_puente, id_galga, hx711, offset, scale):
             print("Error al enviar datos:", e)
 
         # Pausar entre envíos
-        time.sleep(1)  # Pausa de 1 segundo entre envíos para evitar envíos rápidos
+        time.sleep(1)   # Pausa de 1 segundo entre envíos para evitar envíos rápidos
 
 # Programa principal
 def main():
