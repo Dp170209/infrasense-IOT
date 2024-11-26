@@ -3,9 +3,9 @@ from tkinter import messagebox
 import requests
 from datetime import datetime
 
-URL_PUENTE = "http://172.20.10.13/infrasense-IOT/puente.php"
-URL_GALGA = "http://172.20.10.13/infrasense-IOT/galga.php"
-URL_DATOS = "http://172.20.10.13/infrasense-IOT/datos.php"
+URL_PUENTE = "http://192.168.0.15/infrasense-IOT/Scripts/puente.php"
+URL_GALGA = "http://192.168.0.15/infrasense-IOT/Scripts/galga.php"
+URL_DATOS = "http://192.168.0.15/infrasense-IOT/Scripts/datos.php"
 
 def enviar_datos_al_servidor(ubicacion, nombre_puente):
     try:
@@ -450,25 +450,22 @@ def modificar_dato():
     tk.Label(ventana_modificar_dato, text="Seleccione el Dato:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
     dato_seleccionado = tk.StringVar()
     opciones_datos = [
-        f"{p['idDato']} - Cos Taylor: {p['Cos_Taylor']} - Cos Trig: {p['Cos_Trig']} - Error: {p['Error']} - Fecha: {p['fecha_hora']}"
+        f"{p['idDato']} - Peso: {p['peso']} - Placa: {p['iothing']} - Fecha: {p['fecha_hora']}"
         for p in datos
     ]
     menu_datos = tk.OptionMenu(ventana_modificar_dato, dato_seleccionado, *opciones_datos)
     menu_datos.pack(pady=5)
 
-    tk.Label(ventana_modificar_dato, text="Nuevo valor Taylor:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
+    tk.Label(ventana_modificar_dato, text="Nuevo valor Peso:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
     entrada_taylor = tk.Entry(ventana_modificar_dato, font=("Arial", 12))
     entrada_taylor.pack(pady=5)
 
-    tk.Label(ventana_modificar_dato, text="Nuevo valor Trig:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
+    tk.Label(ventana_modificar_dato, text="Nueva Placa:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
     entrada_trig = tk.Entry(ventana_modificar_dato, font=("Arial", 12))
     entrada_trig.pack(pady=5)
 
-    tk.Label(ventana_modificar_dato, text="Nuevo valor Error:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
-    entrada_error = tk.Entry(ventana_modificar_dato, font=("Arial", 12))
-    entrada_error.pack(pady=5)
 
-    datos_actuales = {"Cos_Taylor": "", "Cos_Trig": "", "Error": ""}
+    datos_actuales = {"peso": "", "iothing": ""}
 
     def cargar_datos_dato(*args):
         seleccion = dato_seleccionado.get()
@@ -476,18 +473,14 @@ def modificar_dato():
             id_dato = seleccion.split(" - ")[0]
             dato = next((p for p in datos if str(p['idDato']) == id_dato), None)
             if dato:
-                datos_actuales["Cos_Taylor"] = dato["Cos_Taylor"]
-                datos_actuales["Cos_Trig"] = dato["Cos_Trig"]
-                datos_actuales["Error"] = dato["Error"]
-
+                datos_actuales["peso"] = dato["peso"]
+                datos_actuales["iothing"] = dato["iothing"]
+                
                 entrada_taylor.delete(0, tk.END)
-                entrada_taylor.insert(0, datos_actuales["Cos_Taylor"])
+                entrada_taylor.insert(0, datos_actuales["peso"])
 
                 entrada_trig.delete(0, tk.END)
-                entrada_trig.insert(0, datos_actuales["Cos_Trig"])
-
-                entrada_error.delete(0, tk.END)
-                entrada_error.insert(0, datos_actuales["Error"])
+                entrada_trig.insert(0, datos_actuales["iothing"])
 
     dato_seleccionado.trace("w", cargar_datos_dato)
 
@@ -495,15 +488,13 @@ def modificar_dato():
         seleccion = dato_seleccionado.get()
         if seleccion:
             id_dato = seleccion.split(" - ")[0]
-            nuevo_taylor = entrada_taylor.get() or datos_actuales["Cos_Taylor"]
-            nuevo_trig = entrada_trig.get() or datos_actuales["Cos_Trig"]
-            nuevo_error = entrada_error.get() or datos_actuales["Error"]
+            nuevo_peso = entrada_taylor.get() or datos_actuales["peso"]
+            iothing = entrada_trig.get() or datos_actuales["iothing"]
 
             datos_modificados = {
                 "id_dato": id_dato,
-                "nuevo_taylor": nuevo_taylor,
-                "nuevo_trig": nuevo_trig,
-                "nuevo_error": nuevo_error,
+                "nuevo_peso": nuevo_peso,
+                "iothing": iothing,
                 "accion": "modificar"
             }
             try:
@@ -536,7 +527,7 @@ def eliminar_dato():
     tk.Label(ventana_eliminar_dato, text="Seleccione el Dato a Eliminar:", bg="#f8f9fa", font=("Arial", 12)).pack(pady=5)
     dato_seleccionado = tk.StringVar()
     opciones_datos = [
-        f"{p['idDato']} - Cos Taylor: {p['Cos_Taylor']} - Cos Trig: {p['Cos_Trig']} - Error: {p['Error']} - Fecha: {p['fecha_hora']}"
+        f"{p['idDato']} - Peso: {p['peso']} - Placa: {p['iothing']} - Fecha: {p['fecha_hora']}"
         for p in datos
     ]
     menu_datos = tk.OptionMenu(ventana_eliminar_dato, dato_seleccionado, *opciones_datos)
@@ -596,9 +587,8 @@ def mostrar_dato():
         frame_dato.pack(fill="x", pady=5)
 
         tk.Label(frame_dato, text=f"ID: {dato['idDato']}", font=("Arial", 11, "bold"), bg="#e9ecef").pack(anchor="w")
-        tk.Label(frame_dato, text=f"Cos Taylor: {dato['Cos_Taylor']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
-        tk.Label(frame_dato, text=f"Cos Trig: {dato['Cos_Trig']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
-        tk.Label(frame_dato, text=f"Error: {dato['Error']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
+        tk.Label(frame_dato, text=f"Peso: {dato['peso']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
+        tk.Label(frame_dato, text=f"Placa: {dato['iothing']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
         tk.Label(frame_dato, text=f"Fecha Hora: {dato['fecha_hora']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
         tk.Label(frame_dato, text=f"idGalga: {dato['idGalga']}", font=("Arial", 11), bg="#e9ecef").pack(anchor="w", padx=10)
 
