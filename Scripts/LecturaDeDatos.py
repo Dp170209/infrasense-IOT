@@ -9,7 +9,7 @@ app = Flask(__name__)
 
 # Configuración de la base de datos
 db_config = {
-    'host': 'localhost',
+    'host': '192.168.0.26',
     'user': 'root',
     'password': '',
     'database': 'puentesdb'
