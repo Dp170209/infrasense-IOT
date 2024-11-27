@@ -51,6 +51,7 @@
         const puenteSelector = document.getElementById('puenteSelector');
         const chartCanvas = document.getElementById('chart');
         let chartInstance;
+        let updateInterval = null; // Intervalo para la actualización en tiempo real
 
         async function fetchData(url) {
             const response = await fetch(url);
@@ -59,7 +60,7 @@
 
         function renderChart(labels, datasets) {
             if (chartInstance) {
-                chartInstance.destroy();
+                chartInstance.destroy(); // Destruir gráfico previo
             }
             chartInstance = new Chart(chartCanvas, {
                 type: 'line',
@@ -70,111 +71,176 @@
                         legend: { position: 'top' }
                     },
                     scales: {
-                        x: { title: { display: true, text: 'Fecha y Hora' } },
+                        x: {
+                            title: { display: true, text: 'Fecha y Hora' },
+                            ticks: {
+                                maxRotation: 45, // Rotación máxima de las etiquetas
+                                minRotation: 0,  // Rotación mínima de las etiquetas
+                                callback: function (value, index, values) {
+                                    // Mostrar solo cada 5 etiquetas (configurable)
+                                    return index % 5 === 0 ? this.getLabelForValue(value) : '';
+                                }
+                            }
+                        },
                         y: { title: { display: true, text: 'Peso' } }
+                    },
+                    layout: {
+                        padding: {
+                            top: 10,
+                            right: 20,
+                            bottom: 10,
+                            left: 10
+                        }
                     }
                 }
             });
         }
 
+        function startRealTimeUpdate(callback, url, interval = 5000) {
+            if (updateInterval) {
+                clearInterval(updateInterval); // Detener cualquier actualización previa
+            }
+            updateInterval = setInterval(async () => {
+                const data = await fetchData(url);
+                callback(data);
+            }, interval);
+        }
+
+        function stopRealTimeUpdate() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+        }
+
         // Funciones para Galgas
         async function filterGalga() {
+            stopRealTimeUpdate(); // Detener actualizaciones previas
             const idGalga = galgaSelector.value;
             if (!idGalga) {
                 alert('Seleccione una galga.');
                 return;
             }
-            const data = await fetchData(`/api/galga/${idGalga}`);
-            const labels = data.map(row => row.fecha_hora);
-            const dataset = {
-                label: `Galga ${idGalga}`,
-                data: data.map(row => row.peso),
-                borderColor: 'blue',
-                fill: false
+            const url = `/api/galga/${idGalga}`;
+            const updateCallback = (data) => {
+                const labels = data.map(row => row.fecha_hora);
+                const dataset = {
+                    label: `Galga ${idGalga}`,
+                    data: data.map(row => row.peso),
+                    borderColor: 'blue',
+                    fill: false
+                };
+                renderChart(labels, [dataset]);
             };
-            renderChart(labels, [dataset]);
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
         }
 
         async function showAllGalgas() {
-            const data = await fetchData('/api/galgas');
-            const labels = [...new Set(data.map(row => row.fecha_hora))];
-            const datasets = data.reduce((acc, row) => {
-                const galgaIndex = acc.findIndex(ds => ds.label === `Galga ${row.idGalga}`);
-                if (galgaIndex >= 0) {
-                    acc[galgaIndex].data.push(row.peso);
-                } else {
-                    acc.push({
-                        label: `Galga ${row.idGalga}`,
-                        data: [row.peso],
-                        borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-                        fill: false
-                    });
-                }
-                return acc;
-            }, []);
-            renderChart(labels, datasets);
+            stopRealTimeUpdate(); // Detener actualizaciones previas
+            const url = '/api/galgas';
+            const updateCallback = (data) => {
+                const labels = [...new Set(data.map(row => row.fecha_hora))];
+                const datasets = data.reduce((acc, row) => {
+                    const galgaIndex = acc.findIndex(ds => ds.label === `Galga ${row.idGalga}`);
+                    if (galgaIndex >= 0) {
+                        acc[galgaIndex].data.push(row.peso);
+                    } else {
+                        acc.push({
+                            label: `Galga ${row.idGalga}`,
+                            data: [row.peso],
+                            borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+                            fill: false
+                        });
+                    }
+                    return acc;
+                }, []);
+                renderChart(labels, datasets);
+            };
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
         }
 
         // Funciones para Puentes
         async function filterPuente() {
+            stopRealTimeUpdate(); // Detener actualizaciones previas
             const idPuente = puenteSelector.value;
             if (!idPuente) {
                 alert('Seleccione un puente.');
                 return;
             }
-            const data = await fetchData(`/api/puente/${idPuente}`);
-            const labels = data.map(row => row.fecha_hora);
-            const datasets = data.reduce((acc, row) => {
-                const galgaIndex = acc.findIndex(ds => ds.label === `Galga ${row.idGalga}`);
-                if (galgaIndex >= 0) {
-                    acc[galgaIndex].data.push(row.peso);
-                } else {
-                    acc.push({
-                        label: `Galga ${row.idGalga}`,
-                        data: [row.peso],
-                        borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-                        fill: false
-                    });
-                }
-                return acc;
-            }, []);
-            renderChart(labels, datasets);
+            const url = `/api/puente/${idPuente}`;
+            const updateCallback = (data) => {
+                const labels = data.map(row => row.fecha_hora);
+                const datasets = data.reduce((acc, row) => {
+                    const galgaIndex = acc.findIndex(ds => ds.label === `Galga ${row.idGalga}`);
+                    if (galgaIndex >= 0) {
+                        acc[galgaIndex].data.push(row.peso);
+                    } else {
+                        acc.push({
+                            label: `Galga ${row.idGalga}`,
+                            data: [row.peso],
+                            borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+                            fill: false
+                        });
+                    }
+                    return acc;
+                }, []);
+                renderChart(labels, datasets);
+            };
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
         }
 
         async function showAllPuentes() {
-            const data = await fetchData('/api/puentes');
-            const labels = [...new Set(data.map(row => row.fecha_hora))];
-            const datasets = data.reduce((acc, row) => {
-                const datasetLabel = `Puente ${row.idPuente} - Galga ${row.idGalga}`;
-                const datasetIndex = acc.findIndex(ds => ds.label === datasetLabel);
-                if (datasetIndex >= 0) {
-                    acc[datasetIndex].data.push(row.peso);
-                } else {
-                    acc.push({
-                        label: datasetLabel,
-                        data: [row.peso],
-                        borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-                        fill: false
-                    });
-                }
-                return acc;
-            }, []);
-            renderChart(labels, datasets);
+            stopRealTimeUpdate(); // Detener actualizaciones previas
+            const url = '/api/puentes';
+            const updateCallback = (data) => {
+                const labels = [...new Set(data.map(row => row.fecha_hora))];
+                const datasets = data.reduce((acc, row) => {
+                    const datasetLabel = `Puente ${row.idPuente} - Galga ${row.idGalga}`;
+                    const datasetIndex = acc.findIndex(ds => ds.label === datasetLabel);
+                    if (datasetIndex >= 0) {
+                        acc[datasetIndex].data.push(row.peso);
+                    } else {
+                        acc.push({
+                            label: datasetLabel,
+                            data: [row.peso],
+                            borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
+                            fill: false
+                        });
+                    }
+                    return acc;
+                }, []);
+                renderChart(labels, datasets);
+            };
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
         }
 
         async function simulateBreak() {
+            stopRealTimeUpdate(); // Detener actualizaciones previas
             const idPuente = puenteSelector.value;
             if (!idPuente) {
                 alert('Seleccione un puente.');
                 return;
             }
-            const data = await fetchData(`/api/quiebre/${idPuente}`);
-            const labels = data.map(row => row.fecha_hora);
-            const datasets = [
-                { label: 'Peso Original', data: data.map(row => row.peso), borderColor: 'blue', fill: false },
-                { label: 'Peso con Quiebre', data: data.map(row => row.peso_quiebre), borderColor: 'red', borderDash: [5, 5], fill: false }
-            ];
-            renderChart(labels, datasets);
+            const url = `/api/quiebre/${idPuente}`;
+            const updateCallback = (data) => {
+                const labels = data.map(row => row.fecha_hora);
+                const datasets = [
+                    { label: 'Peso Original', data: data.map(row => row.peso), borderColor: 'blue', fill: false },
+                    { label: 'Peso con Quiebre', data: data.map(row => row.peso_quiebre), borderColor: 'red', borderDash: [5, 5], fill: false }
+                ];
+                renderChart(labels, datasets);
+            };
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
         }
 
         // Eventos

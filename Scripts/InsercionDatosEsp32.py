@@ -19,7 +19,7 @@ wifi_init()
 class Board:
     class BoardType:
         PICO_W = 'Raspberry Pi Pico W'
-        ESP32 = 'ESP32-9'
+        ESP32 = 'ESP32-1'
         UNKNOWN = 'Unknown'
 
     def __init__(self):
@@ -68,7 +68,7 @@ BOARD_TYPE = Board().type
 print("Tarjeta Detectada:", BOARD_TYPE)
 
 # Configuración inicial
-url = "http://192.168.0.15/infrasense-IOT/insertar_datos.php"  # Reemplaza con la URL correcta
+url = "http://192.168.0.15/infrasense-IOT/Scripts/insertar_datos.php"  # Reemplaza con la URL correcta
 
 # Función para obtener la lista de puentes
 def obtener_puentes():

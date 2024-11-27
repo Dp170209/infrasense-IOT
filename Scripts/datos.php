@@ -1,6 +1,6 @@
 <?php
 // Configuración de conexión a la base de datos
-$conexion = new mysqli("localhost", "root", "", "puentesDB");
+$conexion = new mysqli("192.168.0.15", "root", "", "puentesDB");
 
 if ($conexion->connect_error) {
     die(json_encode(["error" => "Conexión fallida: " . $conexion->connect_error]));
