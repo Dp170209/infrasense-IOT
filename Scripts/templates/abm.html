@@ -28,9 +28,31 @@
       <div id="submenu-container" class="text-center my-4"></div>
       <!-- Contenedor de formularios -->
       <div id="form-container" class="p-4 border rounded bg-light"></div>
+      <div id="alert-container" class="mt-3"></div>
     </div>
 
     <script>
+      function showAlert(message, type = "success", duration = 3000) {
+        const alertContainer = document.getElementById("alert-container");
+
+        // Create alert element
+        const alertElement = document.createElement("div");
+        alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+        alertElement.role = "alert";
+        alertElement.innerHTML = `${message}`;
+
+        // Append alert to container
+        alertContainer.appendChild(alertElement);
+
+        // Automatically remove alert after the specified duration
+        setTimeout(() => {
+          alertElement.classList.remove("show");
+          alertElement.classList.add("fade");
+          setTimeout(() => {
+            alertElement.remove();
+          }, 500); // Wait for fade-out transition
+        }, duration);
+      }
       // Mostrar opciones para puentes
       function showPuenteOptions() {
         const submenuContainer = document.getElementById("submenu-container");
@@ -229,7 +251,7 @@
             });
           })
           .catch((error) => {
-            alert("Error al cargar los puentes");
+            showAlert("Error en al cargar los puentes", "danger",2000);
             console.error(error);
           });
       }
@@ -271,11 +293,11 @@
         axios
           .post(`/puente`, data)
           .then((response) => {
-            alert("Operación exitosa");
+            showAlert("Operación exitosa", "success",2000);
             console.log(response.data);
           })
           .catch((error) => {
-            alert("Error en la operación");
+            showAlert("Error en la operación", "danger",2000);
             console.error(error);
           });
       }
@@ -319,7 +341,7 @@
             formContainer.innerHTML = html;
           })
           .catch((error) => {
-            alert("Error al obtener los datos");
+            showAlert("Error al obtener los datos", "danger",2000);
             console.error(error);
           });
       }
@@ -340,7 +362,7 @@
             });
           })
           .catch((error) => {
-            alert("Error al cargar las galgas");
+            showAlert("Error al cargar las galgas", "danger",2000);
             console.error(error);
           });
       }
@@ -359,7 +381,7 @@
               data.fecha_instalacion || "";
           })
           .catch((error) => {
-            alert("Error al obtener los datos de la galga");
+            showAlert("Error al obtener los datos de la galga", "danger",2000);
             console.error(error);
           });
       }
@@ -382,11 +404,11 @@
         axios
           .post(`/galga`, data)
           .then((response) => {
-            alert("Operación exitosa");
+            showAlert("Operación exitosa", "success",2000);
             console.log(response.data);
           })
           .catch((error) => {
-            alert("Error en la operación");
+            showAlert("Error en la operación", "danger",2000);
             console.error(error);
           });
       }
@@ -432,7 +454,7 @@
             formContainer.innerHTML = html;
           })
           .catch((error) => {
-            alert("Error al obtener los datos");
+            showAlert("Error al obtener los datos", "danger",2000);
             console.error(error);
           });
       }
@@ -525,37 +547,36 @@
             });
           })
           .catch((error) => {
-            alert("Error al cargar los datos");
+            showAlert("Error al cargar los datos", "danger",2000);
             console.error(error);
           });
       }
 
       // Obtener valores actuales de un dato específico
       function fetchCurrentDatoValues(id) {
-  if (!id) return;
+        if (!id) return;
 
-  axios
-    .get(`/datos_de_lectura?id_dato=${id}`)
-    .then((response) => {
-      const data = response.data;
+        axios
+          .get(`/datos_de_lectura?id_dato=${id}`)
+          .then((response) => {
+            const data = response.data;
 
-      if (data.error) {
-        alert(data.error);
-        return;
+            if (data.error) {
+              alert(data.error);
+              return;
+            }
+
+            // Llenar los campos del formulario con los datos obtenidos
+            document.querySelector('input[name="nuevo_peso"]').value =
+              data.peso || "";
+            document.querySelector('input[name="iothing"]').value =
+              data.iothing || "";
+          })
+          .catch((error) => {
+            showAlert("Error al obtener los datos del registro", "danger",2000);
+            console.error(error);
+          });
       }
-
-      // Llenar los campos del formulario con los datos obtenidos
-      document.querySelector('input[name="nuevo_peso"]').value =
-        data.peso || "";
-      document.querySelector('input[name="iothing"]').value =
-        data.iothing || "";
-    })
-    .catch((error) => {
-      alert("Error al obtener los datos del registro");
-      console.error(error);
-    });
-}
-
 
       // Enviar formulario de datos al backend
       function submitDatosForm(action) {
@@ -575,11 +596,11 @@
         axios
           .post(`/datos_de_lectura`, data)
           .then((response) => {
-            alert("Operación exitosa");
+            showAlert("Operación exitosa", "success",2000);
             console.log(response.data);
           })
           .catch((error) => {
-            alert("Error en la operación");
+            showAlert("Error en la operación", "danger",2000);
             console.error(error);
           });
       }
@@ -623,7 +644,7 @@
             formContainer.innerHTML = html;
           })
           .catch((error) => {
-            alert("Error al obtener los datos");
+            showAlert("Error al obtener los datos", "danger",2000);
             console.error(error);
           });
       }
