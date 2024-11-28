@@ -1,0 +1,653 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ABM Servidor</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
+    />
+  </head>
+  <body>
+    <div class="container mt-5">
+      <h1 class="text-center">ABM Servidor</h1>
+      <!-- Botones principales -->
+      <div class="d-flex justify-content-center gap-3 my-4">
+        <button class="btn btn-primary" onclick="showPuenteOptions()">
+          Puente
+        </button>
+        <button class="btn btn-secondary" onclick="showGalgaOptions()">
+          Galga
+        </button>
+        <button class="btn btn-info" onclick="showDatosOptions()">Datos</button>
+      </div>
+      <!-- Submenú -->
+      <div id="submenu-container" class="text-center my-4"></div>
+      <!-- Contenedor de formularios -->
+      <div id="form-container" class="p-4 border rounded bg-light"></div>
+      <div id="alert-container" class="mt-3"></div>
+    </div>
+
+    <script>
+      function showAlert(message, type = "success", duration = 3000) {
+        const alertContainer = document.getElementById("alert-container");
+
+        // Create alert element
+        const alertElement = document.createElement("div");
+        alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+        alertElement.role = "alert";
+        alertElement.innerHTML = `${message}`;
+
+        // Append alert to container
+        alertContainer.appendChild(alertElement);
+
+        // Automatically remove alert after the specified duration
+        setTimeout(() => {
+          alertElement.classList.remove("show");
+          alertElement.classList.add("fade");
+          setTimeout(() => {
+            alertElement.remove();
+          }, 500); // Wait for fade-out transition
+        }, duration);
+      }
+      // Mostrar opciones para puentes
+      function showPuenteOptions() {
+        const submenuContainer = document.getElementById("submenu-container");
+        const formContainer = document.getElementById("form-container");
+        formContainer.innerHTML = ""; // Limpiar formularios
+
+        let optionsHTML = `<h2>Puente</h2>`;
+        const actions = ["Agregar", "Modificar", "Mostrar", "Eliminar"];
+
+        actions.forEach((action) => {
+          optionsHTML += `
+                    <button class="btn btn-outline-primary mx-2 my-2" onclick="loadPuenteForm('${action.toLowerCase()}')">
+                        ${action} Puente
+                    </button>
+                `;
+        });
+
+        submenuContainer.innerHTML = optionsHTML;
+      }
+
+      // Mostrar opciones para galgas
+      function showGalgaOptions() {
+        const submenuContainer = document.getElementById("submenu-container");
+        const formContainer = document.getElementById("form-container");
+        formContainer.innerHTML = ""; // Limpiar formularios
+
+        let optionsHTML = `<h2>Galga</h2>`;
+        const actions = ["Agregar", "Modificar", "Mostrar", "Eliminar"];
+
+        actions.forEach((action) => {
+          optionsHTML += `
+                    <button class="btn btn-outline-secondary mx-2 my-2" onclick="loadGalgaForm('${action.toLowerCase()}')">
+                        ${action} Galga
+                    </button>
+                `;
+        });
+
+        submenuContainer.innerHTML = optionsHTML;
+      }
+
+      // Cargar formularios para puentes
+      function loadPuenteForm(action) {
+        const formContainer = document.getElementById("form-container");
+        formContainer.innerHTML = "";
+
+        let formHTML = `<h3>${
+          action.charAt(0).toUpperCase() + action.slice(1)
+        } Puente</h3>`;
+
+        if (action === "mostrar") {
+          fetchPuenteData();
+          return;
+        }
+
+        if (action === "agregar") {
+          formHTML += `
+                    <form id="form-puente-agregar">
+                        <div class="mb-3">
+                            <label class="form-label">Nombre del Puente:</label>
+                            <input type="text" name="nombre_puente" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Ubicación:</label>
+                            <input type="text" name="ubicacion" class="form-control" required>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="submitPuenteForm('${action}')">Agregar</button>
+                    </form>
+                `;
+        } else if (action === "modificar") {
+          formHTML += `
+                    <form id="form-puente-modificar">
+                        <div class="mb-3">
+                            <label class="form-label">ID del Puente:</label>
+                            <select name="id_puente" class="form-control" onchange="fetchCurrentPuenteValues(this.value)">
+                                <option value="" disabled selected>Seleccionar Puente</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nuevo Nombre del Puente:</label>
+                            <input type="text" name="nombre_puente" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva Ubicación:</label>
+                            <input type="text" name="ubicacion" class="form-control">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="submitPuenteForm('${action}')">Modificar</button>
+                    </form>
+                `;
+          fetchPuenteOptions();
+        } else if (action === "eliminar") {
+          formHTML += `
+                    <form id="form-puente-eliminar">
+                        <div class="mb-3">
+                            <label class="form-label">ID del Puente:</label>
+                            <select name="id_puente" class="form-control">
+                                <option value="" disabled selected>Seleccionar Puente</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-danger" onclick="submitPuenteForm('${action}')">Eliminar</button>
+                    </form>
+                `;
+          fetchPuenteOptions();
+        }
+
+        formContainer.innerHTML = formHTML;
+      }
+
+      // Cargar formularios para galgas
+      function loadGalgaForm(action) {
+        const formContainer = document.getElementById("form-container");
+        formContainer.innerHTML = "";
+
+        let formHTML = `<h3>${
+          action.charAt(0).toUpperCase() + action.slice(1)
+        } Galga</h3>`;
+
+        if (action === "mostrar") {
+          fetchGalgaData();
+          return;
+        }
+
+        if (action === "agregar") {
+          formHTML += `
+                    <form id="form-galga-agregar">
+                        <div class="mb-3">
+                            <label class="form-label">Ubicación de la Galga:</label>
+                            <input type="text" name="ubicacion_galga" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Fecha de Instalación:</label>
+                            <input type="date" name="fecha_instalacion" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">ID del Puente:</label>
+                            <select name="id_puente" class="form-control">
+                                <option value="" disabled selected>Seleccionar Puente</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="submitGalgaForm('${action}')">Agregar</button>
+                    </form>
+                `;
+          fetchPuenteOptions();
+        } else if (action === "modificar") {
+          formHTML += `
+                    <form id="form-galga-modificar">
+                        <div class="mb-3">
+                            <label class="form-label">ID de la Galga:</label>
+                            <select name="id_galga" class="form-control" onchange="fetchCurrentGalgaValues(this.value)">
+                                <option value="" disabled selected>Seleccionar Galga</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva Ubicación:</label>
+                            <input type="text" name="ubicacion_galga" class="form-control">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Nueva Fecha de Instalación:</label>
+                            <input type="date" name="fecha_instalacion" class="form-control">
+                        </div>
+                        <button type="button" class="btn btn-primary" onclick="submitGalgaForm('${action}')">Modificar</button>
+                    </form>
+                `;
+          fetchGalgaOptions();
+        } else if (action === "eliminar") {
+          formHTML += `
+                    <form id="form-galga-eliminar">
+                        <div class="mb-3">
+                            <label class="form-label">ID de la Galga:</label>
+                            <select name="id_galga" class="form-control">
+                                <option value="" disabled selected>Seleccionar Galga</option>
+                            </select>
+                        </div>
+                        <button type="button" class="btn btn-danger" onclick="submitGalgaForm('${action}')">Eliminar</button>
+                    </form>
+                `;
+          fetchGalgaOptions();
+        }
+
+        formContainer.innerHTML = formHTML;
+      }
+
+      // Obtener opciones de puentes para el selector
+      function fetchPuenteOptions() {
+        axios
+          .get(`/puente`)
+          .then((response) => {
+            const puentes = response.data;
+            const select = document.querySelector('select[name="id_puente"]');
+            select.innerHTML =
+              '<option value="" disabled selected>Seleccionar Puente</option>';
+            puentes.forEach((puente) => {
+              const option = document.createElement("option");
+              option.value = puente.idPuente;
+              option.textContent = `${puente.idPuente} - ${puente.nombre}`;
+              select.appendChild(option);
+            });
+          })
+          .catch((error) => {
+            showAlert("Error en al cargar los puentes", "danger",2000);
+            console.error(error);
+          });
+      }
+
+      // Obtener valores actuales de un puente específico para modificar
+      function fetchCurrentPuenteValues(id) {
+        if (!id) return;
+
+        axios
+          .get(`/puente?id_puente=${id}`)
+          .then((response) => {
+            const data = response.data;
+            document.querySelector('input[name="nombre_puente"]').value =
+              data.nombre_puente || "";
+            document.querySelector('input[name="ubicacion"]').value =
+              data.ubicacion || "";
+          })
+          .catch((error) => {
+            alert("Error al obtener los datos del puente");
+            console.error(error);
+          });
+      }
+
+      // Enviar formulario de puente al backend
+      function submitPuenteForm(action) {
+        const formId = `form-puente-${action}`;
+        const formData = new FormData(document.getElementById(formId));
+        const data = {};
+        formData.forEach((value, key) => {
+          data[key] = value;
+        });
+
+        if (action === "eliminar") {
+          data["accion"] = "eliminar";
+        } else if (action === "modificar") {
+          data["accion"] = "modificar";
+        }
+
+        axios
+          .post(`/puente`, data)
+          .then((response) => {
+            showAlert("Operación exitosa", "success",2000);
+            console.log(response.data);
+          })
+          .catch((error) => {
+            showAlert("Error en la operación", "danger",2000);
+            console.error(error);
+          });
+      }
+
+      // Mostrar tabla de puentes
+      function fetchPuenteData() {
+        axios
+          .get(`/puente`)
+          .then((response) => {
+            const data = response.data;
+            const formContainer = document.getElementById("form-container");
+
+            if (!data.length) {
+              formContainer.innerHTML = "<p>No hay datos disponibles.</p>";
+              return;
+            }
+
+            let html = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID Puente</th>
+                            <th>Nombre</th>
+                            <th>Ubicación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach((item) => {
+              html += `
+                    <tr>
+                        <td>${item.idPuente}</td>
+                        <td>${item.nombre}</td>
+                        <td>${item.ubicacion}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            formContainer.innerHTML = html;
+          })
+          .catch((error) => {
+            showAlert("Error al obtener los datos", "danger",2000);
+            console.error(error);
+          });
+      }
+      // Obtener opciones de galgas para el selector
+      function fetchGalgaOptions() {
+        axios
+          .get(`/galga`)
+          .then((response) => {
+            const galgas = response.data;
+            const select = document.querySelector('select[name="id_galga"]');
+            select.innerHTML =
+              '<option value="" disabled selected>Seleccionar Galga</option>';
+            galgas.forEach((galga) => {
+              const option = document.createElement("option");
+              option.value = galga.idGalga;
+              option.textContent = `${galga.idGalga} - ${galga.ubicacion}`;
+              select.appendChild(option);
+            });
+          })
+          .catch((error) => {
+            showAlert("Error al cargar las galgas", "danger",2000);
+            console.error(error);
+          });
+      }
+
+      // Obtener valores actuales de una galga específica para modificar
+      function fetchCurrentGalgaValues(id) {
+        if (!id) return;
+
+        axios
+          .get(`/galga?id_galga=${id}`)
+          .then((response) => {
+            const data = response.data;
+            document.querySelector('input[name="ubicacion_galga"]').value =
+              data.ubicacion_galga || "";
+            document.querySelector('input[name="fecha_instalacion"]').value =
+              data.fecha_instalacion || "";
+          })
+          .catch((error) => {
+            showAlert("Error al obtener los datos de la galga", "danger",2000);
+            console.error(error);
+          });
+      }
+
+      // Enviar formulario de galga al backend
+      function submitGalgaForm(action) {
+        const formId = `form-galga-${action}`;
+        const formData = new FormData(document.getElementById(formId));
+        const data = {};
+        formData.forEach((value, key) => {
+          data[key] = value;
+        });
+
+        if (action === "eliminar") {
+          data["accion"] = "eliminar";
+        } else if (action === "modificar") {
+          data["accion"] = "modificar";
+        }
+
+        axios
+          .post(`/galga`, data)
+          .then((response) => {
+            showAlert("Operación exitosa", "success",2000);
+            console.log(response.data);
+          })
+          .catch((error) => {
+            showAlert("Error en la operación", "danger",2000);
+            console.error(error);
+          });
+      }
+
+      // Mostrar tabla de galgas
+      function fetchGalgaData() {
+        axios
+          .get(`/galga`)
+          .then((response) => {
+            const data = response.data;
+            const formContainer = document.getElementById("form-container");
+
+            if (!data.length) {
+              formContainer.innerHTML = "<p>No hay datos disponibles.</p>";
+              return;
+            }
+
+            let html = `
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>ID Galga</th>
+                            <th>Ubicación</th>
+                            <th>Fecha de Instalación</th>
+                            <th>ID Puente</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            data.forEach((item) => {
+              html += `
+                    <tr>
+                        <td>${item.idGalga}</td>
+                        <td>${item.ubicacion}</td>
+                        <td>${item.fecha_instalacion}</td>
+                        <td>${item.idPuente}</td>
+                    </tr>
+                `;
+            });
+
+            html += `</tbody></table>`;
+            formContainer.innerHTML = html;
+          })
+          .catch((error) => {
+            showAlert("Error al obtener los datos", "danger",2000);
+            console.error(error);
+          });
+      }
+      function showDatosOptions() {
+        const submenuContainer = document.getElementById("submenu-container");
+        const formContainer = document.getElementById("form-container");
+        formContainer.innerHTML = ""; // Limpiar formularios
+
+        let optionsHTML = `<h2>Datos</h2>`;
+        const actions = ["Modificar", "Mostrar", "Eliminar"];
+
+        actions.forEach((action) => {
+          optionsHTML += `
+                <button class="btn btn-outline-info mx-2 my-2" onclick="loadDatosForm('${action.toLowerCase()}')">
+                    ${action} Datos
+                </button>
+            `;
+        });
+
+        submenuContainer.innerHTML = optionsHTML;
+      }
+
+      // Cargar formularios para datos
+      function loadDatosForm(action) {
+        const formContainer = document.getElementById("form-container");
+        formContainer.innerHTML = "";
+
+        let formHTML = `<h3>${
+          action.charAt(0).toUpperCase() + action.slice(1)
+        } Datos</h3>`;
+
+        if (action === "mostrar") {
+          fetchDatosData();
+          return;
+        }
+
+        if (action === "modificar") {
+          formHTML += `
+                <form id="form-datos-modificar">
+                    <div class="mb-3">
+                        <label class="form-label">ID del Dato:</label>
+                        <select name="id_dato" class="form-control" onchange="fetchCurrentDatoValues(this.value)">
+                            <option value="" disabled selected>Seleccionar Dato</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nuevo Peso:</label>
+                        <input type="number" step="0.01" name="nuevo_peso" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Nuevo IoThing:</label>
+                        <input type="text" name="iothing" class="form-control">
+                    </div>
+                    <button type="button" class="btn btn-primary" onclick="submitDatosForm('${action}')">Modificar</button>
+                </form>
+            `;
+          fetchDatosOptions();
+        } else if (action === "eliminar") {
+          formHTML += `
+                <form id="form-datos-eliminar">
+                    <div class="mb-3">
+                        <label class="form-label">ID del Dato:</label>
+                        <select name="id_dato" class="form-control">
+                            <option value="" disabled selected>Seleccionar Dato</option>
+                        </select>
+                    </div>
+                    <button type="button" class="btn btn-danger" onclick="submitDatosForm('${action}')">Eliminar</button>
+                </form>
+            `;
+          fetchDatosOptions();
+        }
+
+        formContainer.innerHTML = formHTML;
+      }
+
+      // Obtener opciones de datos para el selector
+      function fetchDatosOptions() {
+        axios
+          .get(`/datos_de_lectura`)
+          .then((response) => {
+            const datos = response.data;
+            const select = document.querySelector('select[name="id_dato"]');
+            select.innerHTML =
+              '<option value="" disabled selected>Seleccionar Dato</option>';
+            datos.forEach((dato) => {
+              const option = document.createElement("option");
+              option.value = dato.idDato;
+              option.textContent = `${dato.idDato} - ${dato.peso}`;
+              select.appendChild(option);
+            });
+          })
+          .catch((error) => {
+            showAlert("Error al cargar los datos", "danger",2000);
+            console.error(error);
+          });
+      }
+
+      // Obtener valores actuales de un dato específico
+      function fetchCurrentDatoValues(id) {
+        if (!id) return;
+
+        axios
+          .get(`/datos_de_lectura?id_dato=${id}`)
+          .then((response) => {
+            const data = response.data;
+
+            if (data.error) {
+              alert(data.error);
+              return;
+            }
+
+            // Llenar los campos del formulario con los datos obtenidos
+            document.querySelector('input[name="nuevo_peso"]').value =
+              data.peso || "";
+            document.querySelector('input[name="iothing"]').value =
+              data.iothing || "";
+          })
+          .catch((error) => {
+            showAlert("Error al obtener los datos del registro", "danger",2000);
+            console.error(error);
+          });
+      }
+
+      // Enviar formulario de datos al backend
+      function submitDatosForm(action) {
+        const formId = `form-datos-${action}`;
+        const formData = new FormData(document.getElementById(formId));
+        const data = {};
+        formData.forEach((value, key) => {
+          data[key] = value;
+        });
+
+        if (action === "eliminar") {
+          data["accion"] = "eliminar";
+        } else if (action === "modificar") {
+          data["accion"] = "modificar";
+        }
+
+        axios
+          .post(`/datos_de_lectura`, data)
+          .then((response) => {
+            showAlert("Operación exitosa", "success",2000);
+            console.log(response.data);
+          })
+          .catch((error) => {
+            showAlert("Error en la operación", "danger",2000);
+            console.error(error);
+          });
+      }
+
+      // Mostrar tabla de datos
+      function fetchDatosData() {
+        axios
+          .get(`/datos_de_lectura`)
+          .then((response) => {
+            const data = response.data;
+            const formContainer = document.getElementById("form-container");
+
+            if (!data.length) {
+              formContainer.innerHTML = "<p>No hay datos disponibles.</p>";
+              return;
+            }
+
+            let html = `
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID Dato</th>
+                        <th>Peso</th>
+                        <th>IoThing</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+
+            data.forEach((item) => {
+              html += `
+                <tr>
+                    <td>${item.idDato}</td>
+                    <td>${item.peso}</td>
+                    <td>${item.iothing}</td>
+                </tr>
+            `;
+            });
+
+            html += `</tbody></table>`;
+            formContainer.innerHTML = html;
+          })
+          .catch((error) => {
+            showAlert("Error al obtener los datos", "danger",2000);
+            console.error(error);
+          });
+      }
+    </script>
+  </body>
+</html>

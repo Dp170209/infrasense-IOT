@@ -1,6 +1,6 @@
 <?php
 // Configuración de conexión a la base de datos
-$conexion = new mysqli("192.168.0.15", "root", "", "puentesDB");
+$conexion = new mysqli("localhost", "root", "", "puentesDB");
 
 if ($conexion->connect_error) {
     die(json_encode(["error" => "Conexión fallida: " . $conexion->connect_error]));
@@ -21,30 +21,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET)) {
         echo json_encode(["error" => "Error al obtener los datos de lectura: " . $conexion->error]);
     }
 }
-
-// Obtener todos los puentes
-elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && empty($_GET['idPuente']) && empty($_GET['idDato'])) {
-    $resultado = $conexion->query("SELECT * FROM puente");
-    if ($resultado) {
-        $puentes = $resultado->fetch_all(MYSQLI_ASSOC);
-        echo json_encode($puentes);
-    } else {
-        echo json_encode(["error" => "Error al obtener los puentes: " . $conexion->error]);
-    }
-}
-
-// Obtener todas las galgas de un puente específico
-elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['idPuente'])) {
-    $idPuente = (int)$_GET['idPuente'];
-    $stmt = $conexion->prepare("SELECT * FROM galga WHERE idPuente = ?");
-    $stmt->bind_param("i", $idPuente);
-    $stmt->execute();
-    $resultado = $stmt->get_result();
-    $galgas = $resultado->fetch_all(MYSQLI_ASSOC);
-    echo json_encode($galgas);
-    $stmt->close();
-}
-
 // Obtener un dato específico de lectura
 elseif ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['idDato'])) {
     $idDato = (int)$_GET['idDato'];
