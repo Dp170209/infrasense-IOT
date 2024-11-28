@@ -19,7 +19,7 @@ wifi_init()
 class Board:
     class BoardType:
         PICO_W = 'Raspberry Pi Pico W'
-        ESP32 = 'ESP32-1'
+        ESP32 = 'ESP32-7'
         UNKNOWN = 'Unknown'
 
     def __init__(self):
@@ -68,7 +68,7 @@ BOARD_TYPE = Board().type
 print("Tarjeta Detectada:", BOARD_TYPE)
 
 # Configuración inicial
-url = "http://192.168.0.15/infrasense-IOT/Scripts/insertar_datos.php"  # Reemplaza con la URL correcta
+url = "http://192.168.0.6/infrasense-IOT/Scripts/insertar_datos.php"  # Reemplaza con la URL correcta
 
 def obtener_fecha_hora():
     tm = utime.localtime()
@@ -110,8 +110,8 @@ def enviar_datos(id_puente, id_galga, hx711, offset, scale):
 # Programa principal
 def main():
     # Definir los IDs directamente
-    id_puente = "4"  # Reemplaza con el ID del puente deseado
-    id_galga = "24"   # Reemplaza con el ID de la galga deseada
+    id_puente = "2"  # Reemplaza con el ID del puente deseado
+    id_galga = "7"   # Reemplaza con el ID de la galga deseada
 
     print(f"Iniciando envío de datos para Puente {id_puente} y Galga {id_galga}.")
 
@@ -125,3 +125,4 @@ def main():
 # Iniciar el programa
 if __name__ == "__main__":
     main()
+

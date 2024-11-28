@@ -7,7 +7,7 @@ app = Flask(__name__)
 
 # Configuración de la base de datos
 db_config = {
-    'host': '192.168.0.26',
+    'host': 'localhost',
     'user': 'root',
     'password': '',
     'database': 'puentesdb'
@@ -32,7 +32,7 @@ def index():
     """
     puentes_galgas = pd.read_sql(query_puentes_galgas, engine)
 
-    # Calcular el esfuerzo total por puente y el esfuerzo por galga
+    # Convertir a un formato JSON serializable
     puentes = []
     for (idPuente, nombre), group in puentes_galgas.groupby(['idPuente', 'nombre']):
         galgas_puente = group['idGalga'].dropna().astype(int).unique().tolist()
@@ -52,24 +52,25 @@ def index():
             # Determinar el riesgo basado en el porcentaje de esfuerzo
             if porcentaje_esfuerzo <= 50:
                 riesgo = 'Buenas Condiciones'
-            elif porcentaje_esfuerzo <= 80:
+            elif porcentaje_esfuerzo <= 75:
                 riesgo = 'Necesita Mantenimiento'
             else:
                 riesgo = 'Peligro'
 
             galgas_info.append({
-                'idGalga': idGalga,
+                'idGalga': int(idGalga),  # Convertir a int para asegurar serialización
                 'porcentaje_esfuerzo': porcentaje_esfuerzo,
                 'riesgo': riesgo
             })
         puente = {
-            'idPuente': idPuente,
+            'idPuente': int(idPuente),  # Convertir a int para asegurar serialización
             'nombre': nombre,
             'galgas': galgas_info
         }
         puentes.append(puente)
 
     return render_template('index.html', galgas=galgas, puentes=puentes)
+
 
 # Rutas API existentes
 @app.route('/api/galga/<int:id_galga>')
