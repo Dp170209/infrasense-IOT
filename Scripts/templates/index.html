@@ -1,11 +1,13 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard de Galgas y Puentes</title>
+    <title>Dashboard-Infrasense</title>
+    <!-- Incluir Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Incluir Chart.js y chartjs-plugin-zoom -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1"></script>
 
@@ -17,12 +19,86 @@
         #chart:active {
             cursor: grabbing;
         }
+        /* Estilos para los indicadores de riesgo */
+        .badge-riesgo {
+            display: inline-block;
+            padding: 0.5em 0.75em;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #fff;
+            border-radius: 0.25em;
+        }
+        .badge-buenas-condiciones {
+            background-color: #28a745; /* Verde */
+        }
+        .badge-necesita-mantenimiento {
+            background-color: #ffc107; /* Amarillo */
+        }
+        .badge-peligro {
+            background-color: #dc3545; /* Rojo */
+        }
     </style>
 </head>
 
 <body>
     <div class="container mt-5">
-        <h1 class="text-center">Dashboard de Galgas y Puentes</h1>
+        <h1 class="text-center">Dashboard Infrasense</h1>
+
+        <!-- Tabla de Puentes y Galgas -->
+        <h2 class="mt-5">Lista de Puentes y Galgas Asociadas</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Puente</th>
+                    <th>Galgas Asociadas</th>
+                    <th>Porcentaje de Esfuerzo</th>
+                    <th>Riesgo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for puente in puentes %}
+                <tr>
+                    <td>{{ puente.nombre }}</td>
+                    <td>
+                        {% if puente.galgas %}
+                            <!-- Mostrar los IDs de las galgas -->
+                            {{ puente.galgas | map(attribute='idGalga') | join(', ') }}
+                        {% else %}
+                            No hay galgas asociadas
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if puente.galgas %}
+                            <!-- Mostrar los porcentajes de esfuerzo de las galgas -->
+                            {% for galga in puente.galgas %}
+                                Galga {{ galga.idGalga }}: {{ galga.porcentaje_esfuerzo }}%
+                                {% if not loop.last %}<br>{% endif %}
+                            {% endfor %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if puente.galgas %}
+                            <!-- Mostrar el riesgo de las galgas con colores -->
+                            {% for galga in puente.galgas %}
+                                {% if galga.riesgo == 'Buenas Condiciones' %}
+                                    <span class="badge badge-riesgo badge-buenas-condiciones">{{ galga.riesgo }}</span>
+                                {% elif galga.riesgo == 'Necesita Mantenimiento' %}
+                                    <span class="badge badge-riesgo badge-necesita-mantenimiento">{{ galga.riesgo }}</span>
+                                {% elif galga.riesgo == 'Peligro' %}
+                                    <span class="badge badge-riesgo badge-peligro">{{ galga.riesgo }}</span>
+                                {% endif %}
+                                {% if not loop.last %}<br>{% endif %}
+                            {% endfor %}
+                        {% else %}
+                            N/A
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
 
         <!-- Selección por Galgas -->
         <div class="mb-4">
@@ -50,12 +126,12 @@
             </select>
             <div class="d-flex justify-content-around mt-3">
                 <button id="filterPuenteButton" class="btn btn-primary">Mostrar Galgas del Puente</button>
-                <button id="showAllPuentesButton" class="btn btn-secondary">Mostrar Todas las Galgas por
-                    Puentes</button>
+                <button id="showAllPuentesButton" class="btn btn-secondary">Mostrar Todas las Galgas por Puentes</button>
                 <button id="simulateBreakButton" class="btn btn-danger">Simular Quiebre del Puente</button>
             </div>
         </div>
 
+        <!-- Botones de Zoom -->
         <div class="d-flex justify-content-center my-3">
             <button id="zoomInButton" class="btn btn-outline-primary mx-2">+</button>
             <button id="zoomOutButton" class="btn btn-outline-primary mx-2">−</button>
@@ -66,6 +142,7 @@
         <canvas id="chart"></canvas>
     </div>
 
+    <!-- Script JavaScript -->
     <script>
         const galgaSelector = document.getElementById('galgaSelector');
         const puenteSelector = document.getElementById('puenteSelector');
@@ -75,6 +152,36 @@
         let zoomButtonsInitialized = false;
         let keyboardPanInitialized = false;
 
+        // Definir la paleta de colores y el mapa de colores
+        const colorPalette = [
+            '#4E79A7', // Azul
+            '#F28E2B', // Naranja
+            '#E15759', // Rojo
+            '#76B7B2', // Verde azulado
+            '#59A14F', // Verde
+            '#EDC948', // Amarillo
+            '#B07AA1', // Morado
+            '#FF9DA7', // Rosa
+            '#9C755F', // Marrón
+            '#BAB0AC', // Gris
+            '#1F77B4', // Azul más oscuro
+            '#AEC7E8', // Azul claro
+            '#FF7F0E', // Naranja oscuro
+            '#FFBB78', // Naranja claro
+            '#2CA02C', // Verde oscuro
+        ];
+
+        const colorMap = {};
+        const visibilityMap = {}; // Mapa para almacenar el estado de visibilidad
+
+        function getColorForId(id) {
+            if (!colorMap[id]) {
+                // Asignar un color de la paleta de forma cíclica
+                const colorIndex = Object.keys(colorMap).length % colorPalette.length;
+                colorMap[id] = colorPalette[colorIndex];
+            }
+            return colorMap[id];
+        }
 
         async function fetchData(url) {
             const response = await fetch(url);
@@ -87,21 +194,36 @@
                 chartInstance.data.labels = labels;
                 chartInstance.data.datasets = datasets;
                 chartInstance.update(); // Actualizar el gráfico
-            }
-            else {
+            } else {
                 chartInstance = new Chart(chartCanvas, {
                     type: 'line',
                     data: { labels, datasets },
                     options: {
                         responsive: true,
                         plugins: {
-                            legend: { position: 'top' },
+                            legend: {
+                                position: 'top',
+                                onClick: (e, legendItem, legend) => {
+                                    const index = legendItem.datasetIndex;
+                                    const ci = legend.chart;
+                                    const dataset = ci.data.datasets[index];
+
+                                    // Alternar visibilidad
+                                    dataset.hidden = !dataset.hidden;
+
+                                    // Actualizar el mapa de visibilidad
+                                    visibilityMap[dataset.label] = dataset.hidden;
+
+                                    ci.update();
+                                }
+                            },
                             zoom: {
                                 pan: {
                                     enabled: true,
                                     mode: 'xy',
                                     threshold: 1,
                                     speed: 10,
+                                    modifierKey: null, // Permite panear sin tecla modificadora
                                 },
                                 zoom: {
                                     wheel: {
@@ -178,28 +300,19 @@
             });
         }
 
-        // Llamar a la función después de crear el gráfico
-        if (!keyboardPanInitialized) {
-            setupKeyboardPan();
-            keyboardPanInitialized = true;
-        }
-
-
         function setupZoomButtons() {
             document.getElementById('zoomInButton').addEventListener('click', () => {
-                chartInstance.zoom(1.1); // Zoom in (scale factor > 1)
+                chartInstance.zoom(1.1); // Zoom in (factor > 1)
             });
 
             document.getElementById('zoomOutButton').addEventListener('click', () => {
-                chartInstance.zoom(0.9); // Zoom out (scale factor < 1)
+                chartInstance.zoom(0.9); // Zoom out (factor < 1)
             });
 
             document.getElementById('resetZoomButton').addEventListener('click', () => {
-                chartInstance.resetZoom(); // Reset zoom
+                chartInstance.resetZoom(); // Restablecer zoom
             });
         }
-
-
 
         function startRealTimeUpdate(callback, url, interval = 5000) {
             if (updateInterval) {
@@ -229,11 +342,15 @@
             const url = `/api/galga/${idGalga}`;
             const updateCallback = (data) => {
                 const labels = data.map(row => row.fecha_hora);
+                const color = getColorForId(idGalga);
+                const label = `Galga ${idGalga}`;
+                const hidden = visibilityMap[label] || false;
                 const dataset = {
-                    label: `Galga ${idGalga}`,
+                    label: label,
                     data: data.map(row => row.peso),
-                    borderColor: 'blue',
-                    fill: false
+                    borderColor: color,
+                    fill: false,
+                    hidden: hidden
                 };
                 renderChart(labels, [dataset]);
             };
@@ -247,25 +364,33 @@
             const url = '/api/galgas';
             const updateCallback = (data) => {
                 const labels = [...new Set(data.map(row => row.fecha_hora))];
-                const datasets = data.reduce((acc, row) => {
-                    const galgaIndex = acc.findIndex(ds => ds.label === `Galga ${row.idGalga}`);
-                    if (galgaIndex >= 0) {
-                        acc[galgaIndex].data.push(row.peso);
-                    } else {
-                        acc.push({
-                            label: `Galga ${row.idGalga}`,
-                            data: [row.peso],
-                            borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-                            fill: false
-                        });
+                const datasetsMap = {};
+
+                data.forEach(row => {
+                    const idGalga = row.idGalga;
+                    const label = `Galga ${idGalga}`;
+                    const color = getColorForId(idGalga);
+                    const hidden = visibilityMap[label] || false;
+
+                    if (!datasetsMap[idGalga]) {
+                        datasetsMap[idGalga] = {
+                            label: label,
+                            data: [],
+                            borderColor: color,
+                            fill: false,
+                            hidden: hidden
+                        };
                     }
-                    return acc;
-                }, []);
+                    datasetsMap[idGalga].data.push(row.peso);
+                });
+
+                const datasets = Object.values(datasetsMap);
+
                 renderChart(labels, datasets);
             };
             const data = await fetchData(url);
             updateCallback(data); // Renderizar al inicio
-            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
+            startRealTimeUpdate(updateCallback, url);
         }
 
         // Funciones para Puentes
@@ -278,26 +403,35 @@
             }
             const url = `/api/puente/${idPuente}`;
             const updateCallback = (data) => {
-                const labels = data.map(row => row.fecha_hora);
-                const datasets = data.reduce((acc, row) => {
-                    const galgaIndex = acc.findIndex(ds => ds.label === `Galga ${row.idGalga}`);
-                    if (galgaIndex >= 0) {
-                        acc[galgaIndex].data.push(row.peso);
-                    } else {
-                        acc.push({
-                            label: `Galga ${row.idGalga}`,
-                            data: [row.peso],
-                            borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-                            fill: false
-                        });
+                const labels = [...new Set(data.map(row => row.fecha_hora))];
+                const datasetsMap = {};
+
+                data.forEach(row => {
+                    const idGalga = row.idGalga;
+                    const label = `Galga ${idGalga}`;
+                    const uniqueId = `puente${idPuente}_galga${idGalga}`;
+                    const color = getColorForId(uniqueId);
+                    const hidden = visibilityMap[label] || false;
+
+                    if (!datasetsMap[uniqueId]) {
+                        datasetsMap[uniqueId] = {
+                            label: label,
+                            data: [],
+                            borderColor: color,
+                            fill: false,
+                            hidden: hidden
+                        };
                     }
-                    return acc;
-                }, []);
+                    datasetsMap[uniqueId].data.push(row.peso);
+                });
+
+                const datasets = Object.values(datasetsMap);
+
                 renderChart(labels, datasets);
             };
             const data = await fetchData(url);
             updateCallback(data); // Renderizar al inicio
-            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
+            startRealTimeUpdate(updateCallback, url);
         }
 
         async function showAllPuentes() {
@@ -305,26 +439,35 @@
             const url = '/api/puentes';
             const updateCallback = (data) => {
                 const labels = [...new Set(data.map(row => row.fecha_hora))];
-                const datasets = data.reduce((acc, row) => {
-                    const datasetLabel = `Puente ${row.idPuente} - Galga ${row.idGalga}`;
-                    const datasetIndex = acc.findIndex(ds => ds.label === datasetLabel);
-                    if (datasetIndex >= 0) {
-                        acc[datasetIndex].data.push(row.peso);
-                    } else {
-                        acc.push({
-                            label: datasetLabel,
-                            data: [row.peso],
-                            borderColor: `#${Math.floor(Math.random() * 16777215).toString(16)}`,
-                            fill: false
-                        });
+                const datasetsMap = {};
+
+                data.forEach(row => {
+                    const idPuente = row.idPuente;
+                    const idGalga = row.idGalga;
+                    const label = `Puente ${idPuente} - Galga ${idGalga}`;
+                    const uniqueId = `puente${idPuente}_galga${idGalga}`;
+                    const color = getColorForId(uniqueId);
+                    const hidden = visibilityMap[label] || false;
+
+                    if (!datasetsMap[uniqueId]) {
+                        datasetsMap[uniqueId] = {
+                            label: label,
+                            data: [],
+                            borderColor: color,
+                            fill: false,
+                            hidden: hidden
+                        };
                     }
-                    return acc;
-                }, []);
+                    datasetsMap[uniqueId].data.push(row.peso);
+                });
+
+                const datasets = Object.values(datasetsMap);
+
                 renderChart(labels, datasets);
             };
             const data = await fetchData(url);
             updateCallback(data); // Renderizar al inicio
-            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
+            startRealTimeUpdate(updateCallback, url);
         }
 
         async function simulateBreak() {
@@ -337,15 +480,26 @@
             const url = `/api/quiebre/${idPuente}`;
             const updateCallback = (data) => {
                 const labels = data.map(row => row.fecha_hora);
-                const datasets = [
-                    { label: 'Peso Original', data: data.map(row => row.peso), borderColor: 'blue', fill: false },
-                    { label: 'Peso con Quiebre', data: data.map(row => row.peso_quiebre), borderColor: 'red', borderDash: [5, 5], fill: false }
-                ];
-                renderChart(labels, datasets);
+                const datasetOriginal = {
+                    label: 'Peso Original',
+                    data: data.map(row => row.peso),
+                    borderColor: '#1f77b4', // Azul oscuro
+                    fill: false,
+                    hidden: visibilityMap['Peso Original'] || false
+                };
+                const datasetQuiebre = {
+                    label: 'Peso con Quiebre',
+                    data: data.map(row => row.peso_quiebre),
+                    borderColor: '#d62728', // Rojo brillante
+                    borderDash: [5, 5],
+                    fill: false,
+                    hidden: visibilityMap['Peso con Quiebre'] || false
+                };
+                renderChart(labels, [datasetOriginal, datasetQuiebre]);
             };
             const data = await fetchData(url);
             updateCallback(data); // Renderizar al inicio
-            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
+            startRealTimeUpdate(updateCallback, url);
         }
 
         // Eventos
