@@ -50,9 +50,9 @@ def index():
             porcentaje_esfuerzo = round(porcentaje_esfuerzo, 2)
 
             # Determinar el riesgo basado en el porcentaje de esfuerzo
-            if porcentaje_esfuerzo <= 50:
+            if porcentaje_esfuerzo <= 10:
                 riesgo = 'Buenas Condiciones'
-            elif porcentaje_esfuerzo <= 75:
+            elif porcentaje_esfuerzo <= 30:
                 riesgo = 'Necesita Mantenimiento'
             else:
                 riesgo = 'Peligro'

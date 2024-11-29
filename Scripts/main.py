@@ -1,6 +1,7 @@
 import sys
 import os
 import network
+import ntptime  # Módulo para sincronizar tiempo
 import ubinascii
 import machine
 from machine import Pin
@@ -19,7 +20,7 @@ wifi_init()
 class Board:
     class BoardType:
         PICO_W = 'Raspberry Pi Pico W'
-        ESP32 = 'ESP32-7'
+        ESP32 = 'ESP32-1'
         UNKNOWN = 'Unknown'
 
     def __init__(self):
@@ -68,8 +69,17 @@ BOARD_TYPE = Board().type
 print("Tarjeta Detectada:", BOARD_TYPE)
 
 # Configuración inicial
-url = "http://192.168.0.6/infrasense-IOT/Scripts/insertar_datos.php"  # Reemplaza con la URL correcta
+url = "http://192.168.0.15/infrasense-IOT/Scripts/insertar_datos.php"  # Reemplaza con la URL correcta
 
+# Sincronizar tiempo con NTP
+def sincronizar_tiempo():
+    try:
+        ntptime.settime()
+        print("Hora sincronizada con NTP.")
+    except Exception as e:
+        print("Error al sincronizar tiempo con NTP:", e)
+
+# Obtener la fecha y hora actual
 def obtener_fecha_hora():
     tm = utime.localtime()
     return "{:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(tm[0], tm[1], tm[2], tm[3], tm[4], tm[5])
@@ -110,10 +120,13 @@ def enviar_datos(id_puente, id_galga, hx711, offset, scale):
 # Programa principal
 def main():
     # Definir los IDs directamente
-    id_puente = "2"  # Reemplaza con el ID del puente deseado
-    id_galga = "7"   # Reemplaza con el ID de la galga deseada
+    id_puente = "4"  # Reemplaza con el ID del puente deseado
+    id_galga = "24"   # Reemplaza con el ID de la galga deseada
 
     print(f"Iniciando envío de datos para Puente {id_puente} y Galga {id_galga}.")
+
+    # Sincronizar tiempo con NTP
+    sincronizar_tiempo()
 
     # Configurar HX711
     hx711 = HX711(data_pin=21, clock_pin=22)
@@ -125,4 +138,3 @@ def main():
 # Iniciar el programa
 if __name__ == "__main__":
     main()
-
