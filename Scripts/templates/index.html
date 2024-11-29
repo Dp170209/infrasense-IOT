@@ -125,6 +125,42 @@
     <div class="container mt-5">
         <h1 class="text-center">Dashboard de Galgas y Puentes</h1>
 
+        <!-- Imagen del Puente con Botones -->
+        <div class="bridge-container">
+            <img src="/static/images/bridge.png" alt="Puente" class="bridge-image">
+            <button id="btn1" class="bridge-button" onclick="handleBridgeClick(1)">G1</button>
+            <button id="btn2" class="bridge-button" onclick="handleBridgeClick(2)">G2</button>
+            <button id="btn3" class="bridge-button" onclick="handleBridgeClick(3)">G3</button>
+            <button id="btn4" class="bridge-button" onclick="handleBridgeClick(4)">G4</button>
+            <button id="btn5" class="bridge-button" onclick="handleBridgeClick(5)">G5</button>
+            <button id="btn6" class="bridge-button" onclick="handleBridgeClick(6)">G6</button>
+            <button id="btn7" class="bridge-button" onclick="handleBridgeClick(7)">G7</button>
+        </div>
+
+        <!-- Leyenda de Colores de los Botones -->
+        <div class="container mt-4">
+            <div class="d-flex justify-content-center align-items-center">
+                <!-- Buenas Condiciones -->
+                <div class="d-flex align-items-center me-4">
+                    <div style="width: 20px; height: 20px; background-color: #28a745; border-radius: 4px; margin-right: 8px;"></div>
+                    <span>Buenas Condiciones</span>
+                </div>
+                <!-- Necesita Mantenimiento -->
+                <div class="d-flex align-items-center me-4">
+                    <div style="width: 20px; height: 20px; background-color: #ffc107; border-radius: 4px; margin-right: 8px;"></div>
+                    <span>Necesita Mantenimiento</span>
+                </div>
+                <!-- Peligro -->
+                <div class="d-flex align-items-center">
+                    <div style="width: 20px; height: 20px; background-color: #dc3545; border-radius: 4px; margin-right: 8px;"></div>
+                    <span>Peligro</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Añadir un contenedor para las advertencias de estado de peligro -->
+        <div id="warningContainer" class="container mt-3"></div>
+
         <!-- Tabla de Puentes y Galgas -->
         <h2 class="mt-5">Lista de Puentes y Galgas Asociadas</h2>
         <table class="table table-striped">
@@ -177,21 +213,6 @@
                 {% endfor %}
             </tbody>
         </table>
-
-        <!-- Añadir un contenedor para las advertencias de estado de peligro -->
-        <div id="warningContainer" class="container mt-3"></div>
-
-        <!-- Imagen del Puente con Botones -->
-        <div class="bridge-container">
-            <img src="/static/images/bridge.png" alt="Puente" class="bridge-image">
-            <button id="btn1" class="bridge-button" onclick="handleBridgeClick(1)">G1</button>
-            <button id="btn2" class="bridge-button" onclick="handleBridgeClick(2)">G2</button>
-            <button id="btn3" class="bridge-button" onclick="handleBridgeClick(3)">G3</button>
-            <button id="btn4" class="bridge-button" onclick="handleBridgeClick(4)">G4</button>
-            <button id="btn5" class="bridge-button" onclick="handleBridgeClick(5)">G5</button>
-            <button id="btn6" class="bridge-button" onclick="handleBridgeClick(6)">G6</button>
-            <button id="btn7" class="bridge-button" onclick="handleBridgeClick(7)">G7</button>
-        </div>
 
         <!-- Selección por Galgas -->
         <div class="mb-4 mt-5">
