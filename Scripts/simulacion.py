@@ -10,12 +10,15 @@ url = "http://localhost/infrasense-IOT/Scripts/insertar_datos.php"
 inicio = datetime.now()
 n_galgas = 5
 intervalo = timedelta(seconds=2)  # Tiempo entre datos
-peso_max = 500
+peso_auto = 500
+peso_camion = 900
 duracion_subida = 15  # Número de datos en la subida
 duracion_bajada = 3  # Número de datos en la bajada
 n_datos_curva = duracion_subida + duracion_bajada  # Total de datos para una curva
 
+
 def curva_galga(duracion_subida, duracion_bajada, peso_max):
+    """Genera una curva de peso simulada para una galga."""
     pesos = []
     for t in range(duracion_subida + duracion_bajada):
         if t < duracion_subida:
@@ -25,10 +28,12 @@ def curva_galga(duracion_subida, duracion_bajada, peso_max):
         pesos.append(peso)
     return pesos
 
-def enviar_datos_simulados():
+
+def enviar_datos_simulados(tipo_vehiculo, peso_max):
+    """Simula y envía datos para un vehículo."""
     tiempo_actual = inicio  # Tiempo inicial para la primera galga
     for galga in range(2, 7):  # Galgas de 2 a 6
-        print(f"Iniciando simulación y envío de datos para Galga {galga}")
+        print(f"Iniciando simulación y envío de datos para Galga {galga} ({tipo_vehiculo})")
         
         pesos_curva = curva_galga(duracion_subida, duracion_bajada, peso_max)
         
@@ -55,5 +60,24 @@ def enviar_datos_simulados():
         tiempo_actual = tiempo_actual + len(pesos_curva) * intervalo
         print(f"Finalizó Galga {galga} a las {tiempo_actual.strftime('%Y-%m-%d %H:%M:%S')}.\n")
 
+
 if __name__ == "__main__":
-    enviar_datos_simulados()
+    while True:
+        print("\nSimulación de Pesos")
+        print("1. Simular paso de Auto")
+        print("2. Simular paso de Camión")
+        print("3. Salir")
+        opcion = input("Seleccione una opción: ")
+        
+        if opcion == "1":
+            print("Simulando paso de un auto...")
+            enviar_datos_simulados("Auto", peso_auto)
+        elif opcion == "2":
+            print("Simulando paso de un camión...")
+            enviar_datos_simulados("Camión", peso_camion)
+        elif opcion == "3":
+            print("Saliendo del programa.")
+            break
+        else:
+            print("Opción no válida. Intente de nuevo.")
+            
