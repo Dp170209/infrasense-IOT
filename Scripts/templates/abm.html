@@ -1,114 +1,341 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>ABM Servidor</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-    />
-  </head>
-  <body>
-    <div class="container mt-5">
-      <h1 class="text-center">ABM Servidor</h1>
-      <!-- Botones principales -->
-      <div class="d-flex justify-content-center gap-3 my-4">
-        <button class="btn btn-primary" onclick="showPuenteOptions()">
-          Puente
-        </button>
-        <button class="btn btn-secondary" onclick="showGalgaOptions()">
-          Galga
-        </button>
-        <button class="btn btn-info" onclick="showDatosOptions()">Datos</button>
-      </div>
-      <!-- Submenú -->
-      <div id="submenu-container" class="text-center my-4"></div>
-      <!-- Contenedor de formularios -->
-      <div id="form-container" class="p-4 border rounded bg-light"></div>
-      <div id="alert-container" class="mt-3"></div>
-    </div>
 
-    <script>
-      function showAlert(message, type = "success", duration = 3000) {
-        const alertContainer = document.getElementById("alert-container");
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ABM Servidor</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet" />
+  <style>
+    body {
+      font-family: 'Poppins', sans-serif;
+      background: linear-gradient(to right, #f0f4f7, #dfe9f3);
+      margin: 0;
+      padding: 0;
+    }
 
-        // Create alert element
-        const alertElement = document.createElement("div");
-        alertElement.className = `alert alert-${type} alert-dismissible fade show`;
-        alertElement.role = "alert";
-        alertElement.innerHTML = `${message}`;
+    .container {
+      background-color: #ffffff;
+      border-radius: 20px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+      padding: 40px;
+      margin-top: 50px;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
 
-        // Append alert to container
-        alertContainer.appendChild(alertElement);
+    .container:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 40px rgba(0, 0, 0, 0.15);
+    }
 
-        // Automatically remove alert after the specified duration
-        setTimeout(() => {
-          alertElement.classList.remove("show");
-          alertElement.classList.add("fade");
-          setTimeout(() => {
-            alertElement.remove();
-          }, 500); // Wait for fade-out transition
-        }, duration);
+    /* Títulos */
+    h1 {
+      color: #fff;
+      font-size: 45px;
+      font-weight: 600;
+      text-align: center;
+      margin-bottom: 30px;
+      background: linear-gradient(135deg, #6c7ae0, #3a4bdb);
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    h2,
+    h3 {
+      color: #fff;
+      font-size: 30px;
+      text-align: center;
+      background: linear-gradient(135deg, #6c7ae0, #3a4bdb);
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+      text-transform: uppercase;
+      margin-bottom: 20px;
+    }
+
+    /* Botones */
+    .btn {
+      padding: 12px 25px;
+      font-size: 16px;
+      border-radius: 30px;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(145deg, #6c7ae0, #3a4bdb);
+      border: none;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: linear-gradient(145deg, #3a4bdb, #6c7ae0);
+      box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+      transform: translateY(-3px);
+    }
+
+    .btn-secondary {
+      background-color: #f0b042;
+      border-color: #f0b042;
+      color: white;
+    }
+
+    .btn-secondary:hover {
+      background-color: #e09936;
+      transform: translateY(-3px);
+    }
+
+    .btn-info {
+      background-color: #00b8d4;
+      border-color: #00b8d4;
+      color: white;
+    }
+
+    .btn-info:hover {
+      background-color: #008ea1;
+      transform: translateY(-3px);
+    }
+
+    .btn-danger {
+      background-color: #f44336;
+      border-color: #f44336;
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background-color: #d32f2f;
+      transform: translateY(-3px);
+    }
+
+    /* Iconos */
+    .btn i {
+      margin-right: 10px;
+    }
+
+    /* Tablas */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 30px;
+    }
+
+    table th,
+    table td {
+      padding: 16px;
+      text-align: left;
+      border-radius: 10px;
+    }
+
+    table th {
+      background: linear-gradient(135deg, #6c7ae0, #3a4bdb);
+      color: white;
+      font-weight: bold;
+    }
+
+    table td {
+      background-color: #fafafa;
+      color: #34495e;
+      font-weight: 400;
+    }
+
+    table tr:hover {
+      background-color: #e9eff1;
+      transform: scale(1.02);
+      transition: all 0.2s ease;
+    }
+
+    /* Formularios */
+    .form-control {
+      border-radius: 12px;
+      padding: 15px;
+      border: 1px solid #ddd;
+      margin-bottom: 20px;
+      transition: all 0.3s ease;
+    }
+
+    .form-control:focus {
+      border-color: #6c7ae0;
+      box-shadow: 0 0 8px rgba(108, 122, 224, 0.5);
+    }
+
+    .form-label {
+      font-weight: 500;
+      color: #34495e;
+    }
+
+    /* Submenú */
+    #submenu-container button {
+      background: #ffffff;
+      padding: 12px 20px;
+      font-size: 16px;
+      border-radius: 30px;
+      border: 1px solid #ddd;
+      margin: 8px;
+      text-align: center;
+      color: #34495e;
+      transition: all 0.3s ease;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    #submenu-container button:hover {
+      background: #6c7ae0;
+      color: white;
+      border-color: #6c7ae0;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+
+    /* Animaciones */
+    .fade-in {
+      animation: fadeIn 1s ease-in-out;
+    }
+
+    @keyframes fadeIn {
+      0% {
+        opacity: 0;
       }
-      // Mostrar opciones para puentes
-      function showPuenteOptions() {
-        const submenuContainer = document.getElementById("submenu-container");
-        const formContainer = document.getElementById("form-container");
-        formContainer.innerHTML = ""; // Limpiar formularios
 
-        let optionsHTML = `<h2>Puente</h2>`;
-        const actions = ["Agregar", "Modificar", "Mostrar", "Eliminar"];
+      100% {
+        opacity: 1;
+      }
+    }
 
-        actions.forEach((action) => {
-          optionsHTML += `
+    .form-container {
+      opacity: 0;
+      animation: fadeIn 1s ease-in-out forwards;
+    }
+
+    /* Alertas */
+    .alert {
+      border-radius: 15px;
+      font-weight: 600;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .alert-success {
+      background-color: #28a745;
+      color: white;
+    }
+
+    .alert-danger {
+      background-color: #dc3545;
+      color: white;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container mt-5">
+    <h1>ABM Servidor</h1>
+    <!-- Botones principales -->
+    <div class="d-flex justify-content-center gap-4 my-4">
+      <button class="btn btn-primary" onclick="showPuenteOptions()">
+        <i class="bi bi-bridge"></i> Puente
+      </button>
+      <button class="btn btn-secondary" onclick="showGalgaOptions()">
+        <i class="bi bi-gear"></i> Galga
+      </button>
+      <button class="btn btn-info" onclick="showDatosOptions()">
+        <i class="bi bi-table"></i> Datos
+      </button>
+    </div>
+    <!-- Submenú -->
+    <div id="submenu-container" class="text-center my-4"></div>
+    <!-- Contenedor de formularios -->
+    <div id="form-container" class="p-4 border rounded bg-light form-container"></div>
+    <div id="alert-container" class="mt-3"></div>
+  </div>
+
+  <!-- Iconos Bootstrap -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <script>
+    function showAlert(message, type = "success", duration = 3000) {
+      const alertContainer = document.getElementById("alert-container");
+
+      // Create alert element
+      const alertElement = document.createElement("div");
+      alertElement.className = `alert alert-${type} alert-dismissible fade show`;
+      alertElement.role = "alert";
+      alertElement.innerHTML = `${message}`;
+
+      // Append alert to container
+      alertContainer.appendChild(alertElement);
+
+      // Automatically remove alert after the specified duration
+      setTimeout(() => {
+        alertElement.classList.remove("show");
+        alertElement.classList.add("fade");
+        setTimeout(() => {
+          alertElement.remove();
+        }, 500); // Wait for fade-out transition
+      }, duration);
+    }
+    // Mostrar opciones para puentes
+    function showPuenteOptions() {
+      const submenuContainer = document.getElementById("submenu-container");
+      const formContainer = document.getElementById("form-container");
+      formContainer.innerHTML = ""; // Limpiar formularios
+
+      let optionsHTML = `<h2>Puente</h2>`;
+      const actions = ["Agregar", "Modificar", "Mostrar", "Eliminar"];
+
+      actions.forEach((action) => {
+        optionsHTML += `
                     <button class="btn btn-outline-primary mx-2 my-2" onclick="loadPuenteForm('${action.toLowerCase()}')">
                         ${action} Puente
                     </button>
                 `;
-        });
+      });
 
-        submenuContainer.innerHTML = optionsHTML;
-      }
+      submenuContainer.innerHTML = optionsHTML;
+    }
 
-      // Mostrar opciones para galgas
-      function showGalgaOptions() {
-        const submenuContainer = document.getElementById("submenu-container");
-        const formContainer = document.getElementById("form-container");
-        formContainer.innerHTML = ""; // Limpiar formularios
+    // Mostrar opciones para galgas
+    function showGalgaOptions() {
+      const submenuContainer = document.getElementById("submenu-container");
+      const formContainer = document.getElementById("form-container");
+      formContainer.innerHTML = ""; // Limpiar formularios
 
-        let optionsHTML = `<h2>Galga</h2>`;
-        const actions = ["Agregar", "Modificar", "Mostrar", "Eliminar"];
+      let optionsHTML = `<h2>Galga</h2>`;
+      const actions = ["Agregar", "Modificar", "Mostrar", "Eliminar"];
 
-        actions.forEach((action) => {
-          optionsHTML += `
+      actions.forEach((action) => {
+        optionsHTML += `
                     <button class="btn btn-outline-secondary mx-2 my-2" onclick="loadGalgaForm('${action.toLowerCase()}')">
                         ${action} Galga
                     </button>
                 `;
-        });
+      });
 
-        submenuContainer.innerHTML = optionsHTML;
-      }
+      submenuContainer.innerHTML = optionsHTML;
+    }
 
-      // Cargar formularios para puentes
-      function loadPuenteForm(action) {
-        const formContainer = document.getElementById("form-container");
-        formContainer.innerHTML = "";
+    // Cargar formularios para puentes
+    function loadPuenteForm(action) {
+      const formContainer = document.getElementById("form-container");
+      formContainer.innerHTML = "";
 
-        let formHTML = `<h3>${
-          action.charAt(0).toUpperCase() + action.slice(1)
+      let formHTML = `<h3>${action.charAt(0).toUpperCase() + action.slice(1)
         } Puente</h3>`;
 
-        if (action === "mostrar") {
-          fetchPuenteData();
-          return;
-        }
+      if (action === "mostrar") {
+        fetchPuenteData();
+        return;
+      }
 
-        if (action === "agregar") {
-          formHTML += `
+      if (action === "agregar") {
+        formHTML += `
                     <form id="form-puente-agregar">
                         <div class="mb-3">
                             <label class="form-label">Nombre del Puente:</label>
@@ -121,8 +348,8 @@
                         <button type="button" class="btn btn-primary" onclick="submitPuenteForm('${action}')">Agregar</button>
                     </form>
                 `;
-        } else if (action === "modificar") {
-          formHTML += `
+      } else if (action === "modificar") {
+        formHTML += `
                     <form id="form-puente-modificar">
                         <div class="mb-3">
                             <label class="form-label">ID del Puente:</label>
@@ -141,9 +368,9 @@
                         <button type="button" class="btn btn-primary" onclick="submitPuenteForm('${action}')">Modificar</button>
                     </form>
                 `;
-          fetchPuenteOptions();
-        } else if (action === "eliminar") {
-          formHTML += `
+        fetchPuenteOptions();
+      } else if (action === "eliminar") {
+        formHTML += `
                     <form id="form-puente-eliminar">
                         <div class="mb-3">
                             <label class="form-label">ID del Puente:</label>
@@ -154,28 +381,27 @@
                         <button type="button" class="btn btn-danger" onclick="submitPuenteForm('${action}')">Eliminar</button>
                     </form>
                 `;
-          fetchPuenteOptions();
-        }
-
-        formContainer.innerHTML = formHTML;
+        fetchPuenteOptions();
       }
 
-      // Cargar formularios para galgas
-      function loadGalgaForm(action) {
-        const formContainer = document.getElementById("form-container");
-        formContainer.innerHTML = "";
+      formContainer.innerHTML = formHTML;
+    }
 
-        let formHTML = `<h3>${
-          action.charAt(0).toUpperCase() + action.slice(1)
+    // Cargar formularios para galgas
+    function loadGalgaForm(action) {
+      const formContainer = document.getElementById("form-container");
+      formContainer.innerHTML = "";
+
+      let formHTML = `<h3>${action.charAt(0).toUpperCase() + action.slice(1)
         } Galga</h3>`;
 
-        if (action === "mostrar") {
-          fetchGalgaData();
-          return;
-        }
+      if (action === "mostrar") {
+        fetchGalgaData();
+        return;
+      }
 
-        if (action === "agregar") {
-          formHTML += `
+      if (action === "agregar") {
+        formHTML += `
                     <form id="form-galga-agregar">
                         <div class="mb-3">
                             <label class="form-label">Ubicación de la Galga:</label>
@@ -194,9 +420,9 @@
                         <button type="button" class="btn btn-primary" onclick="submitGalgaForm('${action}')">Agregar</button>
                     </form>
                 `;
-          fetchPuenteOptions();
-        } else if (action === "modificar") {
-          formHTML += `
+        fetchPuenteOptions();
+      } else if (action === "modificar") {
+        formHTML += `
                     <form id="form-galga-modificar">
                         <div class="mb-3">
                             <label class="form-label">ID de la Galga:</label>
@@ -215,9 +441,9 @@
                         <button type="button" class="btn btn-primary" onclick="submitGalgaForm('${action}')">Modificar</button>
                     </form>
                 `;
-          fetchGalgaOptions();
-        } else if (action === "eliminar") {
-          formHTML += `
+        fetchGalgaOptions();
+      } else if (action === "eliminar") {
+        formHTML += `
                     <form id="form-galga-eliminar">
                         <div class="mb-3">
                             <label class="form-label">ID de la Galga:</label>
@@ -228,94 +454,94 @@
                         <button type="button" class="btn btn-danger" onclick="submitGalgaForm('${action}')">Eliminar</button>
                     </form>
                 `;
-          fetchGalgaOptions();
-        }
-
-        formContainer.innerHTML = formHTML;
+        fetchGalgaOptions();
       }
 
-      // Obtener opciones de puentes para el selector
-      function fetchPuenteOptions() {
-        axios
-          .get(`/puente`)
-          .then((response) => {
-            const puentes = response.data;
-            const select = document.querySelector('select[name="id_puente"]');
-            select.innerHTML =
-              '<option value="" disabled selected>Seleccionar Puente</option>';
-            puentes.forEach((puente) => {
-              const option = document.createElement("option");
-              option.value = puente.idPuente;
-              option.textContent = `${puente.idPuente} - ${puente.nombre}`;
-              select.appendChild(option);
-            });
-          })
-          .catch((error) => {
-            showAlert("Error en al cargar los puentes", "danger",2000);
-            console.error(error);
+      formContainer.innerHTML = formHTML;
+    }
+
+    // Obtener opciones de puentes para el selector
+    function fetchPuenteOptions() {
+      axios
+        .get(`/puente`)
+        .then((response) => {
+          const puentes = response.data;
+          const select = document.querySelector('select[name="id_puente"]');
+          select.innerHTML =
+            '<option value="" disabled selected>Seleccionar Puente</option>';
+          puentes.forEach((puente) => {
+            const option = document.createElement("option");
+            option.value = puente.idPuente;
+            option.textContent = `${puente.idPuente} - ${puente.nombre}`;
+            select.appendChild(option);
           });
-      }
-
-      // Obtener valores actuales de un puente específico para modificar
-      function fetchCurrentPuenteValues(id) {
-        if (!id) return;
-
-        axios
-          .get(`/puente?id_puente=${id}`)
-          .then((response) => {
-            const data = response.data;
-            document.querySelector('input[name="nombre_puente"]').value =
-              data.nombre_puente || "";
-            document.querySelector('input[name="ubicacion"]').value =
-              data.ubicacion || "";
-          })
-          .catch((error) => {
-            alert("Error al obtener los datos del puente");
-            console.error(error);
-          });
-      }
-
-      // Enviar formulario de puente al backend
-      function submitPuenteForm(action) {
-        const formId = `form-puente-${action}`;
-        const formData = new FormData(document.getElementById(formId));
-        const data = {};
-        formData.forEach((value, key) => {
-          data[key] = value;
+        })
+        .catch((error) => {
+          showAlert("Error en al cargar los puentes", "danger", 2000);
+          console.error(error);
         });
+    }
 
-        if (action === "eliminar") {
-          data["accion"] = "eliminar";
-        } else if (action === "modificar") {
-          data["accion"] = "modificar";
-        }
+    // Obtener valores actuales de un puente específico para modificar
+    function fetchCurrentPuenteValues(id) {
+      if (!id) return;
 
-        axios
-          .post(`/puente`, data)
-          .then((response) => {
-            showAlert("Operación exitosa", "success",2000);
-            console.log(response.data);
-          })
-          .catch((error) => {
-            showAlert("Error en la operación", "danger",2000);
-            console.error(error);
-          });
+      axios
+        .get(`/puente?id_puente=${id}`)
+        .then((response) => {
+          const data = response.data;
+          document.querySelector('input[name="nombre_puente"]').value =
+            data.nombre_puente || "";
+          document.querySelector('input[name="ubicacion"]').value =
+            data.ubicacion || "";
+        })
+        .catch((error) => {
+          alert("Error al obtener los datos del puente");
+          console.error(error);
+        });
+    }
+
+    // Enviar formulario de puente al backend
+    function submitPuenteForm(action) {
+      const formId = `form-puente-${action}`;
+      const formData = new FormData(document.getElementById(formId));
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      if (action === "eliminar") {
+        data["accion"] = "eliminar";
+      } else if (action === "modificar") {
+        data["accion"] = "modificar";
       }
 
-      // Mostrar tabla de puentes
-      function fetchPuenteData() {
-        axios
-          .get(`/puente`)
-          .then((response) => {
-            const data = response.data;
-            const formContainer = document.getElementById("form-container");
+      axios
+        .post(`/puente`, data)
+        .then((response) => {
+          showAlert("Operación exitosa", "success", 2000);
+          console.log(response.data);
+        })
+        .catch((error) => {
+          showAlert("Error en la operación", "danger", 2000);
+          console.error(error);
+        });
+    }
 
-            if (!data.length) {
-              formContainer.innerHTML = "<p>No hay datos disponibles.</p>";
-              return;
-            }
+    // Mostrar tabla de puentes
+    function fetchPuenteData() {
+      axios
+        .get(`/puente`)
+        .then((response) => {
+          const data = response.data;
+          const formContainer = document.getElementById("form-container");
 
-            let html = `
+          if (!data.length) {
+            formContainer.innerHTML = "<p>No hay datos disponibles.</p>";
+            return;
+          }
+
+          let html = `
                 <table class="table">
                     <thead>
                         <tr>
@@ -327,106 +553,106 @@
                     <tbody>
             `;
 
-            data.forEach((item) => {
-              html += `
+          data.forEach((item) => {
+            html += `
                     <tr>
                         <td>${item.idPuente}</td>
                         <td>${item.nombre}</td>
                         <td>${item.ubicacion}</td>
                     </tr>
                 `;
-            });
-
-            html += `</tbody></table>`;
-            formContainer.innerHTML = html;
-          })
-          .catch((error) => {
-            showAlert("Error al obtener los datos", "danger",2000);
-            console.error(error);
           });
-      }
-      // Obtener opciones de galgas para el selector
-      function fetchGalgaOptions() {
-        axios
-          .get(`/galga`)
-          .then((response) => {
-            const galgas = response.data;
-            const select = document.querySelector('select[name="id_galga"]');
-            select.innerHTML =
-              '<option value="" disabled selected>Seleccionar Galga</option>';
-            galgas.forEach((galga) => {
-              const option = document.createElement("option");
-              option.value = galga.idGalga;
-              option.textContent = `${galga.idGalga} - ${galga.ubicacion}`;
-              select.appendChild(option);
-            });
-          })
-          .catch((error) => {
-            showAlert("Error al cargar las galgas", "danger",2000);
-            console.error(error);
-          });
-      }
 
-      // Obtener valores actuales de una galga específica para modificar
-      function fetchCurrentGalgaValues(id) {
-        if (!id) return;
-
-        axios
-          .get(`/galga?id_galga=${id}`)
-          .then((response) => {
-            const data = response.data;
-            document.querySelector('input[name="ubicacion_galga"]').value =
-              data.ubicacion_galga || "";
-            document.querySelector('input[name="fecha_instalacion"]').value =
-              data.fecha_instalacion || "";
-          })
-          .catch((error) => {
-            showAlert("Error al obtener los datos de la galga", "danger",2000);
-            console.error(error);
-          });
-      }
-
-      // Enviar formulario de galga al backend
-      function submitGalgaForm(action) {
-        const formId = `form-galga-${action}`;
-        const formData = new FormData(document.getElementById(formId));
-        const data = {};
-        formData.forEach((value, key) => {
-          data[key] = value;
+          html += `</tbody></table>`;
+          formContainer.innerHTML = html;
+        })
+        .catch((error) => {
+          showAlert("Error al obtener los datos", "danger", 2000);
+          console.error(error);
         });
-
-        if (action === "eliminar") {
-          data["accion"] = "eliminar";
-        } else if (action === "modificar") {
-          data["accion"] = "modificar";
-        }
-
-        axios
-          .post(`/galga`, data)
-          .then((response) => {
-            showAlert("Operación exitosa", "success",2000);
-            console.log(response.data);
-          })
-          .catch((error) => {
-            showAlert("Error en la operación", "danger",2000);
-            console.error(error);
+    }
+    // Obtener opciones de galgas para el selector
+    function fetchGalgaOptions() {
+      axios
+        .get(`/galga`)
+        .then((response) => {
+          const galgas = response.data;
+          const select = document.querySelector('select[name="id_galga"]');
+          select.innerHTML =
+            '<option value="" disabled selected>Seleccionar Galga</option>';
+          galgas.forEach((galga) => {
+            const option = document.createElement("option");
+            option.value = galga.idGalga;
+            option.textContent = `${galga.idGalga} - ${galga.ubicacion}`;
+            select.appendChild(option);
           });
+        })
+        .catch((error) => {
+          showAlert("Error al cargar las galgas", "danger", 2000);
+          console.error(error);
+        });
+    }
+
+    // Obtener valores actuales de una galga específica para modificar
+    function fetchCurrentGalgaValues(id) {
+      if (!id) return;
+
+      axios
+        .get(`/galga?id_galga=${id}`)
+        .then((response) => {
+          const data = response.data;
+          document.querySelector('input[name="ubicacion_galga"]').value =
+            data.ubicacion_galga || "";
+          document.querySelector('input[name="fecha_instalacion"]').value =
+            data.fecha_instalacion || "";
+        })
+        .catch((error) => {
+          showAlert("Error al obtener los datos de la galga", "danger", 2000);
+          console.error(error);
+        });
+    }
+
+    // Enviar formulario de galga al backend
+    function submitGalgaForm(action) {
+      const formId = `form-galga-${action}`;
+      const formData = new FormData(document.getElementById(formId));
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      if (action === "eliminar") {
+        data["accion"] = "eliminar";
+      } else if (action === "modificar") {
+        data["accion"] = "modificar";
       }
 
-      // Mostrar tabla de galgas
-      function fetchGalgaData() {
-        axios
-          .get(`/galga`)
-          .then((response) => {
-            const data = response.data;
-            const formContainer = document.getElementById("form-container");
+      axios
+        .post(`/galga`, data)
+        .then((response) => {
+          showAlert("Operación exitosa", "success", 2000);
+          console.log(response.data);
+        })
+        .catch((error) => {
+          showAlert("Error en la operación", "danger", 2000);
+          console.error(error);
+        });
+    }
 
-            if (!data.length) {
-              formContainer.innerHTML = "<p>No hay datos disponibles.</p>";
-              return;
-            }
+    // Mostrar tabla de galgas
+    function fetchGalgaData() {
+      axios
+        .get(`/galga`)
+        .then((response) => {
+          const data = response.data;
+          const formContainer = document.getElementById("form-container");
 
-            let html = `
+          if (!data.length) {
+            formContainer.innerHTML = "<p>No hay datos disponibles.</p>";
+            return;
+          }
+
+          let html = `
                 <table class="table">
                     <thead>
                         <tr>
@@ -439,8 +665,8 @@
                     <tbody>
             `;
 
-            data.forEach((item) => {
-              html += `
+          data.forEach((item) => {
+            html += `
                     <tr>
                         <td>${item.idGalga}</td>
                         <td>${item.ubicacion}</td>
@@ -448,51 +674,50 @@
                         <td>${item.idPuente}</td>
                     </tr>
                 `;
-            });
-
-            html += `</tbody></table>`;
-            formContainer.innerHTML = html;
-          })
-          .catch((error) => {
-            showAlert("Error al obtener los datos", "danger",2000);
-            console.error(error);
           });
-      }
-      function showDatosOptions() {
-        const submenuContainer = document.getElementById("submenu-container");
-        const formContainer = document.getElementById("form-container");
-        formContainer.innerHTML = ""; // Limpiar formularios
 
-        let optionsHTML = `<h2>Datos</h2>`;
-        const actions = ["Modificar", "Mostrar", "Eliminar"];
+          html += `</tbody></table>`;
+          formContainer.innerHTML = html;
+        })
+        .catch((error) => {
+          showAlert("Error al obtener los datos", "danger", 2000);
+          console.error(error);
+        });
+    }
+    function showDatosOptions() {
+      const submenuContainer = document.getElementById("submenu-container");
+      const formContainer = document.getElementById("form-container");
+      formContainer.innerHTML = ""; // Limpiar formularios
 
-        actions.forEach((action) => {
-          optionsHTML += `
+      let optionsHTML = `<h2>Datos</h2>`;
+      const actions = ["Modificar", "Mostrar", "Eliminar"];
+
+      actions.forEach((action) => {
+        optionsHTML += `
                 <button class="btn btn-outline-info mx-2 my-2" onclick="loadDatosForm('${action.toLowerCase()}')">
                     ${action} Datos
                 </button>
             `;
-        });
+      });
 
-        submenuContainer.innerHTML = optionsHTML;
-      }
+      submenuContainer.innerHTML = optionsHTML;
+    }
 
-      // Cargar formularios para datos
-      function loadDatosForm(action) {
-        const formContainer = document.getElementById("form-container");
-        formContainer.innerHTML = "";
+    // Cargar formularios para datos
+    function loadDatosForm(action) {
+      const formContainer = document.getElementById("form-container");
+      formContainer.innerHTML = "";
 
-        let formHTML = `<h3>${
-          action.charAt(0).toUpperCase() + action.slice(1)
+      let formHTML = `<h3>${action.charAt(0).toUpperCase() + action.slice(1)
         } Datos</h3>`;
 
-        if (action === "mostrar") {
-          fetchDatosData();
-          return;
-        }
+      if (action === "mostrar") {
+        fetchDatosData();
+        return;
+      }
 
-        if (action === "modificar") {
-          formHTML += `
+      if (action === "modificar") {
+        formHTML += `
                 <form id="form-datos-modificar">
                     <div class="mb-3">
                         <label class="form-label">ID del Dato:</label>
@@ -511,9 +736,9 @@
                     <button type="button" class="btn btn-primary" onclick="submitDatosForm('${action}')">Modificar</button>
                 </form>
             `;
-          fetchDatosOptions();
-        } else if (action === "eliminar") {
-          formHTML += `
+        fetchDatosOptions();
+      } else if (action === "eliminar") {
+        formHTML += `
                 <form id="form-datos-eliminar">
                     <div class="mb-3">
                         <label class="form-label">ID del Dato:</label>
@@ -524,101 +749,101 @@
                     <button type="button" class="btn btn-danger" onclick="submitDatosForm('${action}')">Eliminar</button>
                 </form>
             `;
-          fetchDatosOptions();
-        }
-
-        formContainer.innerHTML = formHTML;
+        fetchDatosOptions();
       }
 
-      // Obtener opciones de datos para el selector
-      function fetchDatosOptions() {
-        axios
-          .get(`/datos_de_lectura`)
-          .then((response) => {
-            const datos = response.data;
-            const select = document.querySelector('select[name="id_dato"]');
-            select.innerHTML =
-              '<option value="" disabled selected>Seleccionar Dato</option>';
-            datos.forEach((dato) => {
-              const option = document.createElement("option");
-              option.value = dato.idDato;
-              option.textContent = `${dato.idDato} - ${dato.peso}`;
-              select.appendChild(option);
-            });
-          })
-          .catch((error) => {
-            showAlert("Error al cargar los datos", "danger",2000);
-            console.error(error);
+      formContainer.innerHTML = formHTML;
+    }
+
+    // Obtener opciones de datos para el selector
+    function fetchDatosOptions() {
+      axios
+        .get(`/datos_de_lectura`)
+        .then((response) => {
+          const datos = response.data;
+          const select = document.querySelector('select[name="id_dato"]');
+          select.innerHTML =
+            '<option value="" disabled selected>Seleccionar Dato</option>';
+          datos.forEach((dato) => {
+            const option = document.createElement("option");
+            option.value = dato.idDato;
+            option.textContent = `${dato.idDato} - ${dato.peso}`;
+            select.appendChild(option);
           });
-      }
-
-      // Obtener valores actuales de un dato específico
-      function fetchCurrentDatoValues(id) {
-        if (!id) return;
-
-        axios
-          .get(`/datos_de_lectura?id_dato=${id}`)
-          .then((response) => {
-            const data = response.data;
-
-            if (data.error) {
-              alert(data.error);
-              return;
-            }
-
-            // Llenar los campos del formulario con los datos obtenidos
-            document.querySelector('input[name="nuevo_peso"]').value =
-              data.peso || "";
-            document.querySelector('input[name="iothing"]').value =
-              data.iothing || "";
-          })
-          .catch((error) => {
-            showAlert("Error al obtener los datos del registro", "danger",2000);
-            console.error(error);
-          });
-      }
-
-      // Enviar formulario de datos al backend
-      function submitDatosForm(action) {
-        const formId = `form-datos-${action}`;
-        const formData = new FormData(document.getElementById(formId));
-        const data = {};
-        formData.forEach((value, key) => {
-          data[key] = value;
+        })
+        .catch((error) => {
+          showAlert("Error al cargar los datos", "danger", 2000);
+          console.error(error);
         });
+    }
 
-        if (action === "eliminar") {
-          data["accion"] = "eliminar";
-        } else if (action === "modificar") {
-          data["accion"] = "modificar";
-        }
+    // Obtener valores actuales de un dato específico
+    function fetchCurrentDatoValues(id) {
+      if (!id) return;
 
-        axios
-          .post(`/datos_de_lectura`, data)
-          .then((response) => {
-            showAlert("Operación exitosa", "success",2000);
-            console.log(response.data);
-          })
-          .catch((error) => {
-            showAlert("Error en la operación", "danger",2000);
-            console.error(error);
-          });
+      axios
+        .get(`/datos_de_lectura?id_dato=${id}`)
+        .then((response) => {
+          const data = response.data;
+
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+
+          // Llenar los campos del formulario con los datos obtenidos
+          document.querySelector('input[name="nuevo_peso"]').value =
+            data.peso || "";
+          document.querySelector('input[name="iothing"]').value =
+            data.iothing || "";
+        })
+        .catch((error) => {
+          showAlert("Error al obtener los datos del registro", "danger", 2000);
+          console.error(error);
+        });
+    }
+
+    // Enviar formulario de datos al backend
+    function submitDatosForm(action) {
+      const formId = `form-datos-${action}`;
+      const formData = new FormData(document.getElementById(formId));
+      const data = {};
+      formData.forEach((value, key) => {
+        data[key] = value;
+      });
+
+      if (action === "eliminar") {
+        data["accion"] = "eliminar";
+      } else if (action === "modificar") {
+        data["accion"] = "modificar";
       }
 
-      // Mostrar tabla de datos
-      function fetchDatosData() {
-        axios
-          .get(`/datos_de_lectura`)
-          .then((response) => {
-            const data = response.data;
-            const formContainer = document.getElementById("form-container");
+      axios
+        .post(`/datos_de_lectura`, data)
+        .then((response) => {
+          showAlert("Operación exitosa", "success", 2000);
+          console.log(response.data);
+        })
+        .catch((error) => {
+          showAlert("Error en la operación", "danger", 2000);
+          console.error(error);
+        });
+    }
 
-            if (!data.length) {
-              formContainer.innerHTML = "<p>No hay datos disponibles.</p>";
-              return;
-            }
+    // Mostrar tabla de datos
+    function fetchDatosData() {
+      axios
+        .get(`/datos_de_lectura`)
+        .then((response) => {
+          const data = response.data;
+          const formContainer = document.getElementById("form-container");
 
-            let html = `
+          if (!data.length) {
+            formContainer.innerHTML = "<p>No hay datos disponibles.</p>";
+            return;
+          }
+
+          let html = `
             <table class="table">
                 <thead>
                     <tr>
@@ -630,24 +855,25 @@
                 <tbody>
         `;
 
-            data.forEach((item) => {
-              html += `
+          data.forEach((item) => {
+            html += `
                 <tr>
                     <td>${item.idDato}</td>
                     <td>${item.peso}</td>
                     <td>${item.iothing}</td>
                 </tr>
             `;
-            });
-
-            html += `</tbody></table>`;
-            formContainer.innerHTML = html;
-          })
-          .catch((error) => {
-            showAlert("Error al obtener los datos", "danger",2000);
-            console.error(error);
           });
-      }
-    </script>
-  </body>
+
+          html += `</tbody></table>`;
+          formContainer.innerHTML = html;
+        })
+        .catch((error) => {
+          showAlert("Error al obtener los datos", "danger", 2000);
+          console.error(error);
+        });
+    }
+  </script>
+</body>
+
 </html>

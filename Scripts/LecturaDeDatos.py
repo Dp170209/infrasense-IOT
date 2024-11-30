@@ -3,7 +3,7 @@ import pandas as pd
 import numpy as np  # Importamos numpy para cálculos numéricos
 from sqlalchemy import create_engine
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 # Configuración de la base de datos
 db_config = {
