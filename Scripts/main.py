@@ -1,6 +1,7 @@
 import sys
 import os
 import network
+import ntptime  # Módulo para sincronizar tiempo
 import ubinascii
 import machine
 from machine import Pin
@@ -70,6 +71,15 @@ print("Tarjeta Detectada:", BOARD_TYPE)
 # Configuración inicial
 url = "http://192.168.0.15/infrasense-IOT/Scripts/insertar_datos.php"  # Reemplaza con la URL correcta
 
+# Sincronizar tiempo con NTP
+def sincronizar_tiempo():
+    try:
+        ntptime.settime()
+        print("Hora sincronizada con NTP.")
+    except Exception as e:
+        print("Error al sincronizar tiempo con NTP:", e)
+
+# Obtener la fecha y hora actual
 def obtener_fecha_hora():
     tm = utime.localtime()
     return "{:04}-{:02}-{:02} {:02}:{:02}:{:02}".format(tm[0], tm[1], tm[2], tm[3], tm[4], tm[5])
@@ -114,6 +124,9 @@ def main():
     id_galga = "24"   # Reemplaza con el ID de la galga deseada
 
     print(f"Iniciando envío de datos para Puente {id_puente} y Galga {id_galga}.")
+
+    # Sincronizar tiempo con NTP
+    sincronizar_tiempo()
 
     # Configurar HX711
     hx711 = HX711(data_pin=21, clock_pin=22)
