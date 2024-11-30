@@ -3,8 +3,7 @@ import time
 from datetime import datetime, timedelta
 import numpy as np
 
-# URL del servidor
-url = "http://localhost/infrasense-IOT/Scripts/insertar_datos.php"
+url = "http://192.168.1.211/infrasense-IOT/Scripts/insertar_datos.php"
 
 # Parámetros de simulación
 inicio = datetime.now()
@@ -12,8 +11,8 @@ n_galgas = 5
 intervalo = timedelta(seconds=2)  # Tiempo entre datos
 peso_auto = 500
 peso_camion = 900
-duracion_subida = 15  # Número de datos en la subida
-duracion_bajada = 3  # Número de datos en la bajada
+duracion_subida = 15
+duracion_bajada = 5
 n_datos_curva = duracion_subida + duracion_bajada  # Total de datos para una curva
 
 
@@ -30,7 +29,6 @@ def curva_galga(duracion_subida, duracion_bajada, peso_max):
 
 
 def enviar_datos_simulados(tipo_vehiculo, peso_max):
-    """Simula y envía datos para un vehículo."""
     tiempo_actual = inicio  # Tiempo inicial para la primera galga
     for galga in range(2, 7):  # Galgas de 2 a 6
         print(f"Iniciando simulación y envío de datos para Galga {galga} ({tipo_vehiculo})")
@@ -54,9 +52,8 @@ def enviar_datos_simulados(tipo_vehiculo, peso_max):
             except Exception as e:
                 print("Error al enviar datos:", e)
             
-            time.sleep(intervalo.total_seconds())  # Pausar entre datos
+            time.sleep(intervalo.total_seconds())
         
-        # Actualizar el tiempo para la siguiente galga
         tiempo_actual = tiempo_actual + len(pesos_curva) * intervalo
         print(f"Finalizó Galga {galga} a las {tiempo_actual.strftime('%Y-%m-%d %H:%M:%S')}.\n")
 

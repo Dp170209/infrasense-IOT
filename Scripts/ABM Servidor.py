@@ -5,9 +5,9 @@ from datetime import datetime
 app = Flask(__name__)
 
 # PHP Backend URLs
-URL_PUENTE = "http://192.168.0.5/infrasense-IOT/Scripts/puente.php"
-URL_GALGA = "http://192.168.0.5/infrasense-IOT/Scripts/galga.php"
-URL_DATOS = "http://192.168.0.5/infrasense-IOT/Scripts/datos.php"
+URL_PUENTE = "http://192.168.1.211/infrasense-IOT/Scripts/puente.php"
+URL_GALGA = "http://192.168.1.211/infrasense-IOT/Scripts/galga.php"
+URL_DATOS = "http://192.168.1.211/infrasense-IOT/Scripts/datos.php"
 
 # Routes
 @app.route("/")
