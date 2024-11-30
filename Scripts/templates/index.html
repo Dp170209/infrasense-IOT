@@ -9,7 +9,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Incluir Chart.js y chartjs-plugin-zoom -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1"></script>
 
     <style>
@@ -32,18 +31,15 @@
         }
 
         .badge-buenas-condiciones {
-            background-color: #28a745;
-            /* Verde */
+            background-color: #28a745; /* Verde */
         }
 
         .badge-necesita-mantenimiento {
-            background-color: #ffc107;
-            /* Amarillo */
+            background-color: #ffc107; /* Amarillo */
         }
 
         .badge-peligro {
-            background-color: #dc3545;
-            /* Rojo */
+            background-color: #dc3545; /* Rojo */
         }
 
         /* Posicionar los botones en la imagen */
@@ -129,42 +125,6 @@
     <div class="container mt-5">
         <h1 class="text-center">Dashboard de Galgas y Puentes</h1>
 
-        <!-- Imagen del Puente con Botones -->
-        <div class="bridge-container">
-            <img src="/static/images/bridge.png" alt="Puente" class="bridge-image">
-            <button id="btn1" class="bridge-button" onclick="handleBridgeClick(1)">G1</button>
-            <button id="btn2" class="bridge-button" onclick="handleBridgeClick(2)">G2</button>
-            <button id="btn3" class="bridge-button" onclick="handleBridgeClick(3)">G3</button>
-            <button id="btn4" class="bridge-button" onclick="handleBridgeClick(4)">G4</button>
-            <button id="btn5" class="bridge-button" onclick="handleBridgeClick(5)">G5</button>
-            <button id="btn6" class="bridge-button" onclick="handleBridgeClick(6)">G6</button>
-            <button id="btn7" class="bridge-button" onclick="handleBridgeClick(7)">G7</button>
-        </div>
-
-        <!-- Leyenda de Colores de los Botones -->
-        <div class="container mt-4">
-            <div class="d-flex justify-content-center align-items-center">
-                <!-- Buenas Condiciones -->
-                <div class="d-flex align-items-center me-4">
-                    <div style="width: 20px; height: 20px; background-color: #28a745; border-radius: 4px; margin-right: 8px;"></div>
-                    <span>Buenas Condiciones</span>
-                </div>
-                <!-- Necesita Mantenimiento -->
-                <div class="d-flex align-items-center me-4">
-                    <div style="width: 20px; height: 20px; background-color: #ffc107; border-radius: 4px; margin-right: 8px;"></div>
-                    <span>Necesita Mantenimiento</span>
-                </div>
-                <!-- Peligro -->
-                <div class="d-flex align-items-center">
-                    <div style="width: 20px; height: 20px; background-color: #dc3545; border-radius: 4px; margin-right: 8px;"></div>
-                    <span>Peligro</span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Añadir un contenedor para las advertencias de estado de peligro -->
-        <div id="warningContainer" class="container mt-3"></div>
-
         <!-- Tabla de Puentes y Galgas -->
         <h2 class="mt-5">Lista de Puentes y Galgas Asociadas</h2>
         <table class="table table-striped">
@@ -218,6 +178,21 @@
             </tbody>
         </table>
 
+        <!-- Añadir un contenedor para las advertencias de estado de peligro -->
+        <div id="warningContainer" class="container mt-3"></div>
+
+        <!-- Imagen del Puente con Botones -->
+        <div class="bridge-container">
+            <img src="/static/images/bridge.png" alt="Puente" class="bridge-image">
+            <button id="btn1" class="bridge-button" onclick="handleBridgeClick(1)">G1</button>
+            <button id="btn2" class="bridge-button" onclick="handleBridgeClick(2)">G2</button>
+            <button id="btn3" class="bridge-button" onclick="handleBridgeClick(3)">G3</button>
+            <button id="btn4" class="bridge-button" onclick="handleBridgeClick(4)">G4</button>
+            <button id="btn5" class="bridge-button" onclick="handleBridgeClick(5)">G5</button>
+            <button id="btn6" class="bridge-button" onclick="handleBridgeClick(6)">G6</button>
+            <button id="btn7" class="bridge-button" onclick="handleBridgeClick(7)">G7</button>
+        </div>
+
         <!-- Selección por Galgas -->
         <div class="mb-4 mt-5">
             <label for="galgaSelector" class="form-label">Seleccione el ID de la Galga:</label>
@@ -244,8 +219,7 @@
             </select>
             <div class="d-flex justify-content-around mt-3">
                 <button id="filterPuenteButton" class="btn btn-primary">Mostrar Galgas del Puente</button>
-                <button id="showAllPuentesButton" class="btn btn-secondary">Mostrar Todas las Galgas por
-                    Puentes</button>
+                <button id="showAllPuentesButton" class="btn btn-secondary">Mostrar Todas las Galgas por Puentes</button>
                 <button id="simulateBreakButton" class="btn btn-danger">Simular Quiebre del Puente</button>
             </div>
         </div>
@@ -412,77 +386,88 @@
 
         function renderChart(labels, datasets) {
             if (chartInstance) {
-                chartInstance.destroy(); // Destruye la instancia anterior del gráfico
-            }
-            chartInstance = new Chart(chartCanvas, {
-                type: 'line',
-                data: { labels, datasets },
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'top',
-                            onClick: (e, legendItem, legend) => {
-                                const index = legendItem.datasetIndex;
-                                const ci = legend.chart;
-                                const dataset = ci.data.datasets[index];
+                // Actualizar los datos del gráfico existente
+                chartInstance.data.labels = labels;
+                chartInstance.data.datasets = datasets;
+                chartInstance.update(); // Actualizar el gráfico
+            } else {
+                chartInstance = new Chart(chartCanvas, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                onClick: (e, legendItem, legend) => {
+                                    const index = legendItem.datasetIndex;
+                                    const ci = legend.chart;
+                                    const dataset = ci.data.datasets[index];
 
-                                // Alternar visibilidad
-                                dataset.hidden = !dataset.hidden;
+                                    // Alternar visibilidad
+                                    dataset.hidden = !dataset.hidden;
 
-                                // Actualizar el mapa de visibilidad
-                                visibilityMap[dataset.label] = dataset.hidden;
+                                    // Actualizar el mapa de visibilidad
+                                    visibilityMap[dataset.label] = dataset.hidden;
 
-                                ci.update();
-                            }
-                        },
-                        zoom: {
-                            pan: {
-                                enabled: true,
-                                mode: 'xy',
-                                threshold: 1,
-                                speed: 10,
-                                modifierKey: null, // Permite panear sin tecla modificadora
-                            },
-                            zoom: {
-                                wheel: {
-                                    enabled: true,
-                                    modifierKey: null,
-                                    speed: 0.05,
-                                },
-                                pinch: {
-                                    enabled: true,
-                                },
-                                mode: 'xy',
-                            },
-                        },
-                    },
-                    scales: {
-                        x: {
-                            type: 'time',
-                            time: {
-                                parser: 'yyyy-MM-dd HH:mm:ss',
-                                tooltipFormat: 'yyyy-MM-dd HH:mm:ss',
-                                displayFormats: {
-                                    second: 'HH:mm:ss'
+                                    ci.update();
                                 }
                             },
-                            title: { display: true, text: 'Fecha y Hora' }
+                            zoom: {
+                                pan: {
+                                    enabled: true,
+                                    mode: 'xy',
+                                    threshold: 1,
+                                    speed: 10,
+                                    modifierKey: null, // Permite panear sin tecla modificadora
+                                },
+                                zoom: {
+                                    wheel: {
+                                        enabled: true,
+                                        modifierKey: null,
+                                        speed: 0.05,
+                                    },
+                                    pinch: {
+                                        enabled: true,
+                                    },
+                                    mode: 'xy',
+                                },
+                            },
                         },
-                        y: {
-                            title: { display: true, text: 'Peso' }
-                        }
-                    },
-                    layout: {
-                        padding: {
-                            top: 10,
-                            right: 20,
-                            bottom: 10,
-                            left: 10
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Fecha y Hora' },
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0,
+                                    callback: function (value, index, values) {
+                                        return index % 5 === 0 ? this.getLabelForValue(value) : '';
+                                    }
+                                }
+                            },
+                            y: { title: { display: true, text: 'Peso' } }
+                        },
+                        layout: {
+                            padding: {
+                                top: 10,
+                                right: 20,
+                                bottom: 10,
+                                left: 10
+                            }
                         }
                     }
+                });
+
+                if (!zoomButtonsInitialized) {
+                    setupZoomButtons();
+                    zoomButtonsInitialized = true;
                 }
-            });
+
+                if (!keyboardPanInitialized) {
+                    setupKeyboardPan();
+                    keyboardPanInitialized = true;
+                }
+            }
         }
 
         function setupKeyboardPan() {
@@ -574,6 +559,7 @@
             stopRealTimeUpdate(); // Detener actualizaciones previas
             const url = '/api/galgas';
             const updateCallback = (data) => {
+                const labels = [...new Set(data.map(row => row.fecha_hora))];
                 const datasetsMap = {};
 
                 data.forEach(row => {
@@ -588,23 +574,20 @@
                             data: [],
                             borderColor: color,
                             fill: false,
-                            hidden: hidden,
-                            labels: [] // Etiquetas específicas para esta galga
+                            hidden: hidden
                         };
                     }
                     datasetsMap[idGalga].data.push(row.peso);
-                    datasetsMap[idGalga].labels.push(row.fecha_hora);
                 });
 
                 const datasets = Object.values(datasetsMap);
 
-                renderChart(null, datasets);
+                renderChart(labels, datasets);
             };
             const data = await fetchData(url);
             updateCallback(data); // Renderizar al inicio
             startRealTimeUpdate(updateCallback, url);
         }
-
 
         // Funciones para Puentes
         async function filterPuente() {
