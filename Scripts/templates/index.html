@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard de Galgas y Puentes</title>
+    <!-- Incluir Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Incluir Chart.js y chartjs-plugin-zoom -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1"></script>
+
+    <style>
+        #chart {
+            cursor: crosshair;
+        }
+
+        #chart:active {
+            cursor: grabbing;
+        }
+
+        /* Estilos para los indicadores de riesgo */
+        .badge-riesgo {
+            display: inline-block;
+            padding: 0.5em 0.75em;
+            font-size: 0.9em;
+            font-weight: bold;
+            color: #fff;
+            border-radius: 0.25em;
+        }
+
+        .badge-buenas-condiciones {
+            background-color: #28a745; /* Verde */
+        }
+
+        .badge-necesita-mantenimiento {
+            background-color: #ffc107; /* Amarillo */
+        }
+
+        .badge-peligro {
+            background-color: #dc3545; /* Rojo */
+        }
+
+        /* Posicionar los botones en la imagen */
+        .bridge-container {
+            position: relative;
+            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .bridge-image {
+            width: 100%;
+            height: auto;
+        }
+
+        .bridge-button {
+            position: absolute;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 5px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease-in-out;
+        }
+
+        .bridge-button:hover {
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 15px rgba(0, 123, 255, 0.6);
+        }
+
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
+            }
+            70% {
+                box-shadow: 0 0 20px 10px rgba(0, 123, 255, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
+            }
+        }
+
+        /* Posiciones específicas de los botones en la imagen del puente */
+        #btn1 {
+            top: 30%;
+            left: 2%;
+        }
+
+        #btn2 {
+            top: 30%;
+            left: 16%;
+        }
+
+        #btn3 {
+            top: 55%;
+            left: 31%;
+        }
+
+        #btn4 {
+            top: 30%;
+            left: 48%;
+        }
+
+        #btn5 {
+            top: 55%;
+            left: 65%;
+        }
+
+        #btn6 {
+            top: 30%;
+            left: 80%;
+        }
+
+        #btn7 {
+            top: 30%;
+            left: 93%;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="container mt-5">
+        <h1 class="text-center">Dashboard de Galgas y Puentes</h1>
+
+        <!-- Tabla de Puentes y Galgas -->
+        <h2 class="mt-5">Lista de Puentes y Galgas Asociadas</h2>
+        <table class="table table-striped">
+            <thead>
+                <tr>
+                    <th>Puente</th>
+                    <th>Galgas Asociadas</th>
+                    <th>Porcentaje de Esfuerzo</th>
+                    <th>Riesgo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for puente in puentes %}
+                <tr>
+                    <td>{{ puente.nombre }}</td>
+                    <td>
+                        {% if puente.galgas %}
+                        {{ puente.galgas | map(attribute='idGalga') | join(', ') }}
+                        {% else %}
+                        No hay galgas asociadas
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if puente.galgas %}
+                        {% for galga in puente.galgas %}
+                        Galga {{ galga.idGalga }}: {{ galga.porcentaje_esfuerzo }}%
+                        {% if not loop.last %}<br>{% endif %}
+                        {% endfor %}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if puente.galgas %}
+                        {% for galga in puente.galgas %}
+                        {% if galga.riesgo == 'Buenas Condiciones' %}
+                        <span class="badge badge-riesgo badge-buenas-condiciones">{{ galga.riesgo }}</span>
+                        {% elif galga.riesgo == 'Necesita Mantenimiento' %}
+                        <span class="badge badge-riesgo badge-necesita-mantenimiento">{{ galga.riesgo }}</span>
+                        {% elif galga.riesgo == 'Peligro' %}
+                        <span class="badge badge-riesgo badge-peligro">{{ galga.riesgo }}</span>
+                        {% endif %}
+                        {% if not loop.last %}<br>{% endif %}
+                        {% endfor %}
+                        {% else %}
+                        N/A
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <!-- Añadir un contenedor para las advertencias de estado de peligro -->
+        <div id="warningContainer" class="container mt-3"></div>
+
+        <!-- Imagen del Puente con Botones -->
+        <div class="bridge-container">
+            <img src="/static/images/bridge.png" alt="Puente" class="bridge-image">
+            <button id="btn1" class="bridge-button" onclick="handleBridgeClick(1)">G1</button>
+            <button id="btn2" class="bridge-button" onclick="handleBridgeClick(2)">G2</button>
+            <button id="btn3" class="bridge-button" onclick="handleBridgeClick(3)">G3</button>
+            <button id="btn4" class="bridge-button" onclick="handleBridgeClick(4)">G4</button>
+            <button id="btn5" class="bridge-button" onclick="handleBridgeClick(5)">G5</button>
+            <button id="btn6" class="bridge-button" onclick="handleBridgeClick(6)">G6</button>
+            <button id="btn7" class="bridge-button" onclick="handleBridgeClick(7)">G7</button>
+        </div>
+
+        <!-- Selección por Galgas -->
+        <div class="mb-4 mt-5">
+            <label for="galgaSelector" class="form-label">Seleccione el ID de la Galga:</label>
+            <select id="galgaSelector" class="form-select">
+                <option value="" selected>Seleccionar...</option>
+                {% for galga in galgas %}
+                <option value="{{ galga }}">{{ galga }}</option>
+                {% endfor %}
+            </select>
+            <div class="d-flex justify-content-around mt-3">
+                <button id="filterGalgaButton" class="btn btn-primary">Mostrar Galga Seleccionada</button>
+                <button id="showAllGalgasButton" class="btn btn-secondary">Mostrar Todas las Galgas</button>
+            </div>
+        </div>
+
+        <!-- Selección por Puentes -->
+        <div class="mb-4">
+            <label for="puenteSelector" class="form-label">Seleccione el Puente:</label>
+            <select id="puenteSelector" class="form-select">
+                <option value="" selected>Seleccionar...</option>
+                {% for puente in puentes %}
+                <option value="{{ puente.idPuente }}">{{ puente.nombre }}</option>
+                {% endfor %}
+            </select>
+            <div class="d-flex justify-content-around mt-3">
+                <button id="filterPuenteButton" class="btn btn-primary">Mostrar Galgas del Puente</button>
+                <button id="showAllPuentesButton" class="btn btn-secondary">Mostrar Todas las Galgas por Puentes</button>
+                <button id="simulateBreakButton" class="btn btn-danger">Simular Quiebre del Puente</button>
+            </div>
+        </div>
+
+        <!-- Botones de Zoom -->
+        <div class="d-flex justify-content-center my-3">
+            <button id="zoomInButton" class="btn btn-outline-primary mx-2">+</button>
+            <button id="zoomOutButton" class="btn btn-outline-primary mx-2">−</button>
+            <button id="resetZoomButton" class="btn btn-outline-secondary mx-2">Restablecer Zoom</button>
+        </div>
+
+        <!-- Gráfico -->
+        <canvas id="chart"></canvas>
+    </div>
+
+    <!-- Script JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+        // Obtenemos los datos de los puentes y galgas desde el contexto de Flask
+        const puentes = JSON.parse('{{ puentes | tojson | safe }}');
+        
+        // Recorremos las galgas para cambiar el color de los botones según el riesgo
+        puentes.forEach(puente => {
+            puente.galgas.forEach(galga => {
+                const galgaId = galga.idGalga;
+                const riesgo = galga.riesgo;
+
+                // Selecciona el botón por ID de galga
+                const button = document.getElementById(`btn${galgaId}`);
+                if (button) {
+                    // Cambiar el color del botón según el estado de riesgo
+                    if (riesgo === 'Buenas Condiciones') {
+                        button.style.backgroundColor = '#28a745'; // Verde
+                    } else if (riesgo === 'Necesita Mantenimiento') {
+                        button.style.backgroundColor = '#ffc107'; // Amarillo
+                    } else if (riesgo === 'Peligro') {
+                        button.style.backgroundColor = '#dc3545'; // Rojo
+                    }
+                }
+            });
+        });
+    });
+
+    document.addEventListener('DOMContentLoaded', function () {
+        // Obtenemos los datos de los puentes y galgas desde el contexto de Flask
+        const puentes = JSON.parse('{{ puentes | tojson | safe }}');
+        
+        // Recorremos las galgas para cambiar el color de los botones según el riesgo al cargar la página
+        updateButtonsAndTable(puentes);
+
+        function updateButtonsAndTable(puentes) {
+            const warningContainer = document.getElementById('warningContainer');
+            warningContainer.innerHTML = ''; // Limpiar advertencias anteriores
+
+            // Recorremos las galgas para cambiar el color de los botones según el riesgo
+            puentes.forEach(puente => {
+                puente.galgas.forEach(galga => {
+                    const galgaId = galga.idGalga;
+                    const riesgo = galga.riesgo;
+
+                    // Selecciona el botón por ID de galga
+                    const button = document.getElementById(`btn${galgaId}`);
+                    if (button) {
+                        // Cambiar el color del botón según el estado de riesgo
+                        if (riesgo === 'Buenas Condiciones') {
+                            button.style.backgroundColor = '#28a745'; // Verde
+                        } else if (riesgo === 'Necesita Mantenimiento') {
+                            button.style.backgroundColor = '#ffc107'; // Amarillo
+                        } else if (riesgo === 'Peligro') {
+                            button.style.backgroundColor = '#dc3545'; // Rojo
+
+                            // Añadir advertencia para galgas en estado de peligro
+                            const warningMessage = document.createElement('div');
+                            warningMessage.className = 'alert alert-danger mt-3';
+                            warningMessage.role = 'alert';
+                            warningMessage.innerHTML = `⚠️ La galga <strong>${galgaId}</strong> del puente <strong>${puente.nombre}</strong> está en condiciones peligrosas.`;
+                            warningContainer.appendChild(warningMessage);
+                        }
+                    }
+                });
+            });
+
+            // Actualizar la tabla de puentes y galgas asociadas
+            const tableBody = document.querySelector('table tbody');
+            tableBody.innerHTML = ''; // Limpiar el contenido actual
+            puentes.forEach(puente => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${puente.nombre}</td>
+                    <td>${puente.galgas.length ? puente.galgas.map(galga => galga.idGalga).join(', ') : 'No hay galgas asociadas'}</td>
+                    <td>${puente.galgas.length ? puente.galgas.map(galga => `Galga ${galga.idGalga}: ${galga.porcentaje_esfuerzo}%`).join('<br>') : 'N/A'}</td>
+                    <td>${puente.galgas.length ? puente.galgas.map(galga => {
+                        if (galga.riesgo === 'Buenas Condiciones') {
+                            return '<span class="badge badge-riesgo badge-buenas-condiciones">' + galga.riesgo + '</span>';
+                        } else if (galga.riesgo === 'Necesita Mantenimiento') {
+                            return '<span class="badge badge-riesgo badge-necesita-mantenimiento">' + galga.riesgo + '</span>';
+                        } else if (galga.riesgo === 'Peligro') {
+                            return '<span class="badge badge-riesgo badge-peligro">' + galga.riesgo + '</span>';
+                        } else {
+                            return 'N/A';
+                        }
+                    }).join('<br>') : 'N/A'}</td>
+                `;
+                tableBody.appendChild(row);
+            });
+        }
+
+        // Manejar clics en los botones de la imagen del puente
+        function handleBridgeClick(galgaId) {
+            alert('Información de la Galga ' + galgaId);
+            // Aquí puedes agregar lógica adicional, como mostrar detalles específicos de cada galga
+        }
+    });
+
+    // Manejar clics en los botones de la imagen del puente
+    function handleBridgeClick(galgaId) {
+        alert('Información de la Galga ' + galgaId);
+        // Aquí puedes agregar lógica adicional, como mostrar detalles específicos de cada galga
+    }
+
+        const galgaSelector = document.getElementById('galgaSelector');
+        const puenteSelector = document.getElementById('puenteSelector');
+        const chartCanvas = document.getElementById('chart');
+        let chartInstance;
+        let updateInterval = null;
+        let zoomButtonsInitialized = false;
+        let keyboardPanInitialized = false;
+
+        // Definir la paleta de colores y el mapa de colores
+        const colorPalette = [
+            '#4E79A7', // Azul
+            '#F28E2B', // Naranja
+            '#E15759', // Rojo
+            '#76B7B2', // Verde azulado
+            '#59A14F', // Verde
+            '#EDC948', // Amarillo
+            '#B07AA1', // Morado
+            '#FF9DA7', // Rosa
+            '#9C755F', // Marrón
+            '#BAB0AC', // Gris
+            '#1F77B4', // Azul más oscuro
+            '#AEC7E8', // Azul claro
+            '#FF7F0E', // Naranja oscuro
+            '#FFBB78', // Naranja claro
+            '#2CA02C', // Verde oscuro
+        ];
+
+        const colorMap = {};
+        const visibilityMap = {}; // Mapa para almacenar el estado de visibilidad
+
+        function getColorForId(id) {
+            if (!colorMap[id]) {
+                // Asignar un color de la paleta de forma cíclica
+                const colorIndex = Object.keys(colorMap).length % colorPalette.length;
+                colorMap[id] = colorPalette[colorIndex];
+            }
+            return colorMap[id];
+        }
+
+        async function fetchData(url) {
+            const response = await fetch(url);
+            return response.json();
+        }
+
+        function renderChart(labels, datasets) {
+            if (chartInstance) {
+                // Actualizar los datos del gráfico existente
+                chartInstance.data.labels = labels;
+                chartInstance.data.datasets = datasets;
+                chartInstance.update(); // Actualizar el gráfico
+            } else {
+                chartInstance = new Chart(chartCanvas, {
+                    type: 'line',
+                    data: { labels, datasets },
+                    options: {
+                        responsive: true,
+                        plugins: {
+                            legend: {
+                                position: 'top',
+                                onClick: (e, legendItem, legend) => {
+                                    const index = legendItem.datasetIndex;
+                                    const ci = legend.chart;
+                                    const dataset = ci.data.datasets[index];
+
+                                    // Alternar visibilidad
+                                    dataset.hidden = !dataset.hidden;
+
+                                    // Actualizar el mapa de visibilidad
+                                    visibilityMap[dataset.label] = dataset.hidden;
+
+                                    ci.update();
+                                }
+                            },
+                            zoom: {
+                                pan: {
+                                    enabled: true,
+                                    mode: 'xy',
+                                    threshold: 1,
+                                    speed: 10,
+                                    modifierKey: null, // Permite panear sin tecla modificadora
+                                },
+                                zoom: {
+                                    wheel: {
+                                        enabled: true,
+                                        modifierKey: null,
+                                        speed: 0.05,
+                                    },
+                                    pinch: {
+                                        enabled: true,
+                                    },
+                                    mode: 'xy',
+                                },
+                            },
+                        },
+                        scales: {
+                            x: {
+                                title: { display: true, text: 'Fecha y Hora' },
+                                ticks: {
+                                    maxRotation: 45,
+                                    minRotation: 0,
+                                    callback: function (value, index, values) {
+                                        return index % 5 === 0 ? this.getLabelForValue(value) : '';
+                                    }
+                                }
+                            },
+                            y: { title: { display: true, text: 'Peso' } }
+                        },
+                        layout: {
+                            padding: {
+                                top: 10,
+                                right: 20,
+                                bottom: 10,
+                                left: 10
+                            }
+                        }
+                    }
+                });
+
+                if (!zoomButtonsInitialized) {
+                    setupZoomButtons();
+                    zoomButtonsInitialized = true;
+                }
+
+                if (!keyboardPanInitialized) {
+                    setupKeyboardPan();
+                    keyboardPanInitialized = true;
+                }
+            }
+        }
+
+        function setupKeyboardPan() {
+            document.addEventListener('keydown', (event) => {
+                const panAmount = 10; // Ajusta la cantidad de desplazamiento
+                let delta;
+
+                switch (event.key) {
+                    case 'ArrowLeft':
+                        delta = { x: -panAmount };
+                        break;
+                    case 'ArrowRight':
+                        delta = { x: panAmount };
+                        break;
+                    case 'ArrowUp':
+                        delta = { y: -panAmount };
+                        break;
+                    case 'ArrowDown':
+                        delta = { y: panAmount };
+                        break;
+                    default:
+                        return; // Salir si no es una tecla de flecha
+                }
+
+                chartInstance.pan(delta);
+            });
+        }
+
+        function setupZoomButtons() {
+            document.getElementById('zoomInButton').addEventListener('click', () => {
+                chartInstance.zoom(1.1); // Zoom in (factor > 1)
+            });
+
+            document.getElementById('zoomOutButton').addEventListener('click', () => {
+                chartInstance.zoom(0.9); // Zoom out (factor < 1)
+            });
+
+            document.getElementById('resetZoomButton').addEventListener('click', () => {
+                chartInstance.resetZoom(); // Restablecer zoom
+            });
+        }
+
+        function startRealTimeUpdate(callback, url, interval = 5000) {
+            if (updateInterval) {
+                clearInterval(updateInterval); // Detener cualquier actualización previa
+            }
+            updateInterval = setInterval(async () => {
+                const data = await fetchData(url);
+                callback(data);
+            }, interval);
+        }
+
+        function stopRealTimeUpdate() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+                updateInterval = null;
+            }
+        }
+
+        // Funciones para Galgas
+        async function filterGalga() {
+            stopRealTimeUpdate(); // Detener actualizaciones previas
+            const idGalga = galgaSelector.value;
+            if (!idGalga) {
+                alert('Seleccione una galga.');
+                return;
+            }
+            const url = `/api/galga/${idGalga}`;
+            const updateCallback = (data) => {
+                const labels = data.map(row => row.fecha_hora);
+                const color = getColorForId(idGalga);
+                const label = `Galga ${idGalga}`;
+                const hidden = visibilityMap[label] || false;
+                const dataset = {
+                    label: label,
+                    data: data.map(row => row.peso),
+                    borderColor: color,
+                    fill: false,
+                    hidden: hidden
+                };
+                renderChart(labels, [dataset]);
+            };
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url); // Actualizar automáticamente
+        }
+
+        async function showAllGalgas() {
+            stopRealTimeUpdate(); // Detener actualizaciones previas
+            const url = '/api/galgas';
+            const updateCallback = (data) => {
+                const labels = [...new Set(data.map(row => row.fecha_hora))];
+                const datasetsMap = {};
+
+                data.forEach(row => {
+                    const idGalga = row.idGalga;
+                    const label = `Galga ${idGalga}`;
+                    const color = getColorForId(idGalga);
+                    const hidden = visibilityMap[label] || false;
+
+                    if (!datasetsMap[idGalga]) {
+                        datasetsMap[idGalga] = {
+                            label: label,
+                            data: [],
+                            borderColor: color,
+                            fill: false,
+                            hidden: hidden
+                        };
+                    }
+                    datasetsMap[idGalga].data.push(row.peso);
+                });
+
+                const datasets = Object.values(datasetsMap);
+
+                renderChart(labels, datasets);
+            };
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url);
+        }
+
+        // Funciones para Puentes
+        async function filterPuente() {
+            stopRealTimeUpdate(); // Detener actualizaciones previas
+            const idPuente = puenteSelector.value;
+            if (!idPuente) {
+                alert('Seleccione un puente.');
+                return;
+            }
+            const url = `/api/puente/${idPuente}`;
+            const updateCallback = (data) => {
+                const labels = [...new Set(data.map(row => row.fecha_hora))];
+                const datasetsMap = {};
+
+                data.forEach(row => {
+                    const idGalga = row.idGalga;
+                    const label = `Galga ${idGalga}`;
+                    const uniqueId = `puente${idPuente}_galga${idGalga}`;
+                    const color = getColorForId(uniqueId);
+                    const hidden = visibilityMap[label] || false;
+
+                    if (!datasetsMap[uniqueId]) {
+                        datasetsMap[uniqueId] = {
+                            label: label,
+                            data: [],
+                            borderColor: color,
+                            fill: false,
+                            hidden: hidden
+                        };
+                    }
+                    datasetsMap[uniqueId].data.push(row.peso);
+                });
+
+                const datasets = Object.values(datasetsMap);
+
+                renderChart(labels, datasets);
+            };
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url);
+        }
+
+        async function showAllPuentes() {
+            stopRealTimeUpdate(); // Detener actualizaciones previas
+            const url = '/api/puentes';
+            const updateCallback = (data) => {
+                const labels = [...new Set(data.map(row => row.fecha_hora))];
+                const datasetsMap = {};
+
+                data.forEach(row => {
+                    const idPuente = row.idPuente;
+                    const idGalga = row.idGalga;
+                    const label = `Puente ${idPuente} - Galga ${idGalga}`;
+                    const uniqueId = `puente${idPuente}_galga${idGalga}`;
+                    const color = getColorForId(uniqueId);
+                    const hidden = visibilityMap[label] || false;
+
+                    if (!datasetsMap[uniqueId]) {
+                        datasetsMap[uniqueId] = {
+                            label: label,
+                            data: [],
+                            borderColor: color,
+                            fill: false,
+                            hidden: hidden
+                        };
+                    }
+                    datasetsMap[uniqueId].data.push(row.peso);
+                });
+
+                const datasets = Object.values(datasetsMap);
+
+                renderChart(labels, datasets);
+            };
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url);
+        }
+
+        async function simulateBreak() {
+            stopRealTimeUpdate(); // Detener actualizaciones previas
+            const idPuente = puenteSelector.value;
+            if (!idPuente) {
+                alert('Seleccione un puente.');
+                return;
+            }
+            const url = `/api/quiebre/${idPuente}`;
+            const updateCallback = (data) => {
+                const labels = data.map(row => row.fecha_hora);
+                const datasetOriginal = {
+                    label: 'Peso Original',
+                    data: data.map(row => row.peso),
+                    borderColor: '#1f77b4', // Azul oscuro
+                    fill: false,
+                    hidden: visibilityMap['Peso Original'] || false
+                };
+                const datasetQuiebre = {
+                    label: 'Peso con Quiebre',
+                    data: data.map(row => row.peso_quiebre),
+                    borderColor: '#d62728', // Rojo brillante
+                    borderDash: [5, 5],
+                    fill: false,
+                    hidden: visibilityMap['Peso con Quiebre'] || false
+                };
+                renderChart(labels, [datasetOriginal, datasetQuiebre]);
+            };
+            const data = await fetchData(url);
+            updateCallback(data); // Renderizar al inicio
+            startRealTimeUpdate(updateCallback, url);
+        }
+
+        // Eventos
+        document.getElementById('filterGalgaButton').addEventListener('click', filterGalga);
+        document.getElementById('showAllGalgasButton').addEventListener('click', showAllGalgas);
+        document.getElementById('filterPuenteButton').addEventListener('click', filterPuente);
+        document.getElementById('showAllPuentesButton').addEventListener('click', showAllPuentes);
+        document.getElementById('simulateBreakButton').addEventListener('click', simulateBreak);
+    </script>
+</body>
+
+</html>
