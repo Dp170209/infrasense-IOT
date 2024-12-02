@@ -15,5 +15,9 @@ def index():
 def abm():
     return render_template("abm.html")
 
+@app.route("/prinicpal")
+def principal():
+    return render_template("principal.html")
+
 if __name__ == "__main__":
     app.run(debug=True)
