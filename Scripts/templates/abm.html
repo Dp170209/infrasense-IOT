@@ -463,7 +463,7 @@
     // Obtener opciones de puentes para el selector
     function fetchPuenteOptions() {
       axios
-        .get(`/puente`)
+        .get(`/abm/puente`)
         .then((response) => {
           const puentes = response.data;
           const select = document.querySelector('select[name="id_puente"]');
@@ -487,7 +487,7 @@
       if (!id) return;
 
       axios
-        .get(`/puente?id_puente=${id}`)
+        .get(`/abm/puente?id_puente=${id}`)
         .then((response) => {
           const data = response.data;
           document.querySelector('input[name="nombre_puente"]').value =
@@ -517,7 +517,7 @@
       }
 
       axios
-        .post(`/puente`, data)
+        .post(`/abm/puente`, data)
         .then((response) => {
           showAlert("Operación exitosa", "success", 2000);
           console.log(response.data);
@@ -531,7 +531,7 @@
     // Mostrar tabla de puentes
     function fetchPuenteData() {
       axios
-        .get(`/puente`)
+        .get(`/abm/puente`)
         .then((response) => {
           const data = response.data;
           const formContainer = document.getElementById("form-container");
@@ -574,7 +574,7 @@
     // Obtener opciones de galgas para el selector
     function fetchGalgaOptions() {
       axios
-        .get(`/galga`)
+        .get(`/abm/galga`)
         .then((response) => {
           const galgas = response.data;
           const select = document.querySelector('select[name="id_galga"]');
@@ -598,7 +598,7 @@
       if (!id) return;
 
       axios
-        .get(`/galga?id_galga=${id}`)
+        .get(`/abm/galga?id_galga=${id}`)
         .then((response) => {
           const data = response.data;
           document.querySelector('input[name="ubicacion_galga"]').value =
@@ -628,7 +628,7 @@
       }
 
       axios
-        .post(`/galga`, data)
+        .post(`/abm/galga`, data)
         .then((response) => {
           showAlert("Operación exitosa", "success", 2000);
           console.log(response.data);
@@ -642,7 +642,7 @@
     // Mostrar tabla de galgas
     function fetchGalgaData() {
       axios
-        .get(`/galga`)
+        .get(`/abm/galga`)
         .then((response) => {
           const data = response.data;
           const formContainer = document.getElementById("form-container");
@@ -758,7 +758,7 @@
     // Obtener opciones de datos para el selector
     function fetchDatosOptions() {
       axios
-        .get(`/datos_de_lectura`)
+        .get(`/abm/datos_de_lectura`)
         .then((response) => {
           const datos = response.data;
           const select = document.querySelector('select[name="id_dato"]');
@@ -782,7 +782,7 @@
       if (!id) return;
 
       axios
-        .get(`/datos_de_lectura?id_dato=${id}`)
+        .get(`/abm/datos_de_lectura?id_dato=${id}`)
         .then((response) => {
           const data = response.data;
 
@@ -819,7 +819,7 @@
       }
 
       axios
-        .post(`/datos_de_lectura`, data)
+        .post(`/abm/datos_de_lectura`, data)
         .then((response) => {
           showAlert("Operación exitosa", "success", 2000);
           console.log(response.data);
@@ -833,7 +833,7 @@
     // Mostrar tabla de datos
     function fetchDatosData() {
       axios
-        .get(`/datos_de_lectura`)
+        .get(`/abm/datos_de_lectura`)
         .then((response) => {
           const data = response.data;
           const formContainer = document.getElementById("form-container");

@@ -1,20 +1,15 @@
-from flask import Flask, render_template, request, jsonify
+from flask import Blueprint,Flask, render_template, request, jsonify
 import requests
 from datetime import datetime
 
-app = Flask(__name__)
+abm_bp = Blueprint('abm', __name__)
 
 # PHP Backend URLs
-URL_PUENTE = "http://192.168.1.206/infrasense-IOT/Scripts/puente.php"
-URL_GALGA = "http://192.168.1.206/infrasense-IOT/Scripts/galga.php"
-URL_DATOS = "http://192.168.1.206/infrasense-IOT/Scripts/datos.php"
+URL_PUENTE = "http://192.168.0.5/infrasense-IOT/Scripts/puente.php"
+URL_GALGA = "http://192.168.0.5/infrasense-IOT/Scripts/galga.php"
+URL_DATOS = "http://192.168.0.5/infrasense-IOT/Scripts/datos.php"
 
-# Routes
-@app.route("/")
-def index():
-    return render_template("abm.html")
-
-@app.route("/puente", methods=["POST", "GET"])
+@abm_bp.route("/puente", methods=["POST", "GET"])
 def puente():
     if request.method == "POST":
         data = request.json
@@ -28,7 +23,7 @@ def puente():
             response = requests.get(URL_PUENTE)
         return jsonify(response.json())
 
-@app.route("/galga", methods=["POST", "GET"])
+@abm_bp.route("/galga", methods=["POST", "GET"])
 def galga():
     if request.method == "POST":
         data = request.json
@@ -42,7 +37,7 @@ def galga():
             response = requests.get(URL_GALGA)
         return jsonify(response.json())
 
-@app.route("/datos_de_lectura", methods=["POST", "GET"])
+@abm_bp.route("/datos_de_lectura", methods=["POST", "GET"])
 def datos():
     if request.method == "POST":
         data = request.json
@@ -56,5 +51,3 @@ def datos():
             response = requests.get(URL_DATOS)
         return jsonify(response.json())
 
-if __name__ == "__main__":
-    app.run(debug=True)
