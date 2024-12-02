@@ -302,6 +302,29 @@
         const lng = -68.122106;
         addMarker(lat, lng, "Cerca del Puente America");
         });
+
+        function showCurrentLocation() {
+          if (navigator.geolocation) {
+            navigator.geolocation.getCurrentPosition(
+              (position) => {
+                const { latitude, longitude } = position.coords;
+                // Centrar el mapa en la posición actual
+                map.setView([latitude, longitude], 15);
+                // Añadir un marcador en la posición actual
+                addMarker(latitude, longitude, "Tu posición actual");
+              },
+              (error) => {
+                console.error("Error al obtener la posición:", error);
+                alert("No se pudo obtener tu ubicación.");
+              }
+            );
+          } else {
+            alert("La geolocalización no está soportada en este navegador.");
+          }
+        }
+
+        // Llama a la función para mostrar la posición actual
+        document.addEventListener("DOMContentLoaded", showCurrentLocation);
         document.addEventListener('DOMContentLoaded', function () {
         // Obtenemos los datos de los puentes y galgas desde el contexto de Flask
         const puentes = JSON.parse('{{ puentes | tojson | safe }}');
