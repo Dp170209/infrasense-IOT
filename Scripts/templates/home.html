@@ -1,12 +1,448 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Index</title>
+
+    <!-- Basic -->
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">   
+   
+    <!-- Mobile Metas -->
+    <meta name="viewport" content="width=device-width, minimum-scale=1.0, maximum-scale=1.0, user-scalable=no">
+ 
+     <!-- Site Metas -->
+    <title>Infrasense - Home</title>  
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <!-- Site Icons -->
+	<link rel="shortcut icon" href="{{ url_for('static', filename='images/favicon.ico') }}" type="image/x-icon" />
+	<link rel="apple-touch-icon" href="{{ url_for('static', filename='images/apple-touch-icon.png') }}">
+	<!-- Site Icons -->
+
+<link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/versions.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/responsive.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/animate.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/flaticon.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/prettyPhoto.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/owl.carousel.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/slit-custom.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/tippy.css') }}">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/font-awesome.min.css') }}">
+
+	
+	<script src="js/modernizr.custom.79639.js"></script>
+    <!--[if lt IE 9]>
+      <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+      <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+
+	<style>
+		.seo_version .bg-img-1 {
+			background-image: url("{{ url_for('static', filename='images/slider-01.jpg') }}");
+		}
+	</style>
+	
+
 </head>
-<body>
-    <h1>Bienvenido a la Página Principal</h1>
-    <button onclick="window.location.href='/abm'">Ir a ABM</button>
+
+<body class="seo_version">
+
+	<!-- LOADER -->
+	<div id="preloader">
+		<div class="loader-wrapper">
+			<div class="loader-new">
+				<div class="ball"></div>
+				<div class="ball"></div>
+				<div class="ball"></div>
+			</div>
+			<div class="text">LOADING...</div>
+		</div>
+	</div>
+	<!-- END LOADER -->
+	
+	<!-- Start header -->
+<!-- Start header -->
+<!-- Start header -->
+<header class="top-navbar">
+    <nav class="navbar navbar-expand-lg navbar-light bg-light">
+        <div class="container">
+            <a class="navbar-brand" href="{{ url_for('home') }}">
+                <img src="{{ url_for('static', filename='images/infrasense-logo2.png') }}" alt="Vitalcheck Logo" style="max-height: 80px; width: auto;" />
+            </a>
+            <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbars-seo"
+                aria-controls="navbars-rs-food" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbars-seo">
+                <ul class="navbar-nav ml-auto">
+                    <!-- Enlace actualizado para Home -->
+                    <li class="nav-item"><a class="nav-link" href="{{ url_for('home') }}">Home</a></li>
+                    <!-- Enlace actualizado para Algoritmos -->
+                    <li class="nav-item active"><a class="nav-link" href="{{ url_for('index') }}">Registrarse</a></li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+</header>
+<!-- End header -->
+
+    
+	<div id="slider" class="sl-slider-wrapper" style="position: relative; width: 100%; height: 100vh; overflow: hidden;">
+		<!-- Imagen de fondo -->
+		<img src="{{ url_for('static', filename='images/puente1-banner.jpg') }}" alt="Monitoreo de Puentes" style="width: 100%; height: 100%; object-fit: cover;">
+		
+		<!-- Capa oscura -->
+		<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5);"></div>
+		
+		<!-- Contenido del slider -->
+		<div class="slider-content" style="position: absolute; top: 50%; left: 10%; transform: translateY(-50%); text-align: left; color: white;">
+			<!-- Título principal -->
+			<h2 style="font-size: 60px; color: white; margin-bottom: 20px;">Monitoreo de Puentes</h2>
+			<!-- Texto descriptivo -->
+			<p style="font-size: 24px; color: #d3d3d3; margin-bottom: 30px;">Nuestro sistema está diseñado para facilitar el monitoreo de puentes y la detección temprana de fallos en la estructura</p>
+			<!-- Botón -->
+			<div style="margin-top: 20px;">
+				<a href="{{ url_for('index') }}" style="text-decoration: none;">
+					<button class="bttn-new-a">Comenzar</button>
+				</a>
+			</div>
+		</div>
+	</div>
+	
+	
+
+
+    <!-- Sección 1: Problema Identificado -->
+<div id="problema" class="section wb nopadtop">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 m40">
+                <div class="message-box">
+                    <h2>Problema Identificado</h2>
+                    <p>¿Cuál es el problema con el mantenimiento actual de los puentes?</p>
+                    <p>Hoy en día, mantener infraestructuras como puentes en buen estado es todo un reto. Las inspecciones manuales son lentas, caras y a menudo no detectan problemas a tiempo, lo que puede llevar a reparaciones costosas o, en el peor de los casos, a accidentes graves.</p>
+                    <p>Hace falta una solución más moderna y práctica que permita monitorear estas estructuras de forma continua, identificar problemas antes de que sean graves y aprovechar mejor los recursos disponibles.</p>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="post-media wow fadeIn">
+                    <img src="{{ url_for('static', filename='images/about_01.jpg') }}" alt="" class="img-fluid">
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="entoncesnegro" class="section" style="background-color: #222124; padding: 10px 10;">
+	<div class="container">
+		<div class="section-title text-center" style="color: #fff;">
+			<h3 style="color: #fff; margin-bottom: 10px;">Entonces...</h3>
+			<p style="margin-bottom: 2px;">¿Cómo podemos mejorar la seguridad y el mantenimiento de los puentes?</p>   
+		</div><!-- end title -->
+	</div><!-- end container -->
+</div><!-- end section -->
+
+
+
+<!-- Sección 2: Entonces... -->
+<div id="entonces" class="section wb">
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6 col-xs-12">
+                <div class="why-img-box">
+                    <img src="{{ url_for('static', filename='images/seo_01.png') }}" alt="" class="img-fluid img-rounded">
+                </div>
+            </div>
+            <div class="col-md-6 col-xs-12">
+                <div class="why-dit">
+                    <h4>Nuestro Objetivo</h4>
+                    <p>Desarrollar un sistema de monitoreo basado en IoT que permita supervisar en tiempo real la integridad estructural de puentes para identificar problemas potenciales, mejorar la seguridad pública y optimizar los costos de mantenimiento.</p>
+                    <p>Este sistema utilizará tecnología IoT para recopilar y procesar datos en tiempo real sobre la integridad estructural de los puentes. Permitirá que las personas puedan visualizar de manera sencilla el estado de los puentes en su entorno cercano, mientras que los administradores tendrán acceso a un análisis más detallado del estado de las infraestructuras, facilitando la toma de decisiones y el mantenimiento preventivo.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Sección 3: Detalles Técnicos -->
+<div id="detalles" class="section wb">
+    <div class="container">
+        <div class="row vission-and-mission">
+            <div class="col-md-12">
+                <ul class="nav nav-pills nav-justified" id="myTab" role="tablist">
+                    <li class="nav-item">
+                        <a class="nav-link active" href="#tab_a" data-toggle="tab">¿Qué es IoT?</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="#tab_b" data-toggle="tab">¿Qué sensor usaremos?</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane fade show active" id="tab_a">
+                        <div class="box-inner-m">
+                            <p>El Internet de las Cosas (IoT) es una tecnología que conecta dispositivos como sensores y microcontroladores a internet, permitiendo recopilar y compartir datos en tiempo real. Esto ayuda a automatizar procesos, tomar decisiones más rápidas y eficaces, y monitorear todo tipo de cosas, desde la salud de las personas hasta la seguridad de infraestructuras.</p>
+                            <p>En este proyecto, IoT juega un papel crucial, ya que nos permite mantener un monitoreo continuo y detallado del estado de los puentes. Gracias a esta tecnología, podemos estar conectados permanentemente con las infraestructuras, detectando cualquier anomalía en tiempo real y eliminando la dependencia de las inspecciones manuales periódicas, que suelen ser lentas y costosas. Esto no solo mejora la eficiencia, sino que también garantiza una mayor seguridad para las personas que utilizan estas estructuras a diario.</p>
+                        </div>
+                    </div>
+                    <div class="tab-pane fade" id="tab_b">
+                        <div class="box-inner-m">
+                            <p>Para este sistema usaremos sensores llamados galgas extensiométricas, que son ideales para medir fuerzas y detectar deformaciones en los puentes. Estos sensores están conectados a un módulo llamado HX711, que convierte la información en datos digitales que luego se envían al sistema.</p>
+                            <p>Estos datos se envían al sistema para su análisis en tiempo real, lo que permite identificar cualquier cambio en la estructura antes de que pueda convertirse en un problema serio. Este enfoque proactivo no solo asegura que el puente esté en condiciones óptimas, sino que también permite tomar medidas preventivas rápidamente, garantizando la seguridad de las personas y la durabilidad de la infraestructura.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+	
+
+    <div id="services" class="section lb">
+        <div class="container-fluid">
+			<div class="container">
+				<div class="section-title text-center">
+					<h3>¿Cómo lo haremos?</h3>
+					<p class="lead">Desarrollaremos un sistema eficiente basado en tecnologías modernas que integre modelos predictivos y análisis de datos clínicos, genéticos y de estilo de vida. Este enfoque garantizará herramientas intuitivas y resultados precisos para apoyar a los profesionales de la salud en la detección y seguimiento de la diabetes.</p>
+				</div><!-- end title -->
+			</div>
+            <div class="row text-center">
+				<div class="owl-services-seo owl-carousel owl-theme">
+					<div class="text-center">
+						<div class="service-widget">
+							<div class="post-media wow fadeIn">
+								<img src="{{ url_for('static', filename='images/seo_01.png') }}" alt="" class="img-fluid img-rounded">
+							</div>
+							<h3>Sensores</h3>
+							<p> Incorporarando sensores que midan la fuerza que se ejerce en los puntos críticos de la infraestructura</p>
+						</div><!-- end service -->
+					</div><!-- end col -->
+
+					<div class="text-center">
+						<div class="service-widget">
+							<div class="post-media wow fadeIn">
+								<img src="{{ url_for('static', filename='images/seo_02.png') }}" alt="" class="img-fluid img-rounded">
+							</div>
+							<h3>Base de Datos</h3>
+							<p>Diseñar una base de datos para almacenar toda la información, asegurando que sea accesible y confiable para su análisis. </p>
+						</div><!-- end service -->
+					</div><!-- end col -->
+
+					<div class="text-center">
+						<div class="service-widget">
+							<div class="post-media wow fadeIn">
+								<img src="{{ url_for('static', filename='images/seo_03.png') }}" alt="" class="img-fluid img-rounded">
+							</div>
+							<h3>Dashboard</h3>
+							<p>Crear una interfaz intuitiva donde se pueda monitorear en tiempo real el estado de las estructuras.</p>
+						</div><!-- end service -->
+					</div><!-- end col -->
+					
+					<div class="text-center">
+						<div class="service-widget">
+							<div class="post-media wow fadeIn">
+								<img src="{{ url_for('static', filename='images/seo_04.png') }}" alt="" class="img-fluid img-rounded">
+							</div>
+							<h3>Escalabilidad</h3>
+							<p>Diseñando el sistema de forma flexible, de modo que se puedan añadir más sensores o monitorear nuevas infraestructuras. </p>
+						</div><!-- end service -->
+					</div><!-- end col -->
+
+					<div class="text-center">
+						<div class="service-widget">
+							<div class="post-media wow fadeIn">
+								<img src="{{ url_for('static', filename='images/seo_05.png') }}" alt="" class="img-fluid img-rounded">
+							</div>
+							<h3>Reporting</h3>
+							<p>Duis at tellus at dui tincidunt scelerisque nec sed felis. Suspendisse id dolor sed leo rutrum euismod. Nullam vestibulum fermentum erat. It nam auctor. </p>
+						</div><!-- end service -->
+					</div><!-- end col -->
+
+					<div class="text-center">
+						<div class="service-widget">
+							<div class="post-media wow fadeIn">
+								<img src="{{ url_for('static', filename='images/seo_06.png') }}" alt="" class="img-fluid img-rounded">
+							</div>
+							<h3>Social Media Marketing</h3>
+							<p>Etiam materials ut mollis tellus, vel posuere nulla. Etiam sit amet lacus vitae massa sodales aliquam at eget quam. Integer ultricies et magna quis accumsan.</p>
+						</div><!-- end service -->
+					</div><!-- end col -->
+				</div><!-- end col -->
+            </div><!-- end row -->
+        </div><!-- end container -->
+    </div><!-- end section -->
+
+	<div id="pricing" class="section" style="background-color: #222124;">
+		<div class="container">
+			<div class="section-title text-center" style="color: #fff;">
+				<h3 style="color: #fff;">Memoria Escrita</h3>
+				<p>Si quieres conocer más este proyecto, puedes acceder al siguiente link, en el que se muestra toda la documentación correspondiente y evidencias para llevarlo a cabo. </p>   
+			</div><!-- end title -->
+	
+			<!-- Botón más abajo con enlace -->
+			<div class="text-center" style="margin-top: 20px;">
+				<a href="https://docs.google.com/document/d/1R8suBIvQDDBOL5Xc3hW2xi4HocGpC8FJ/edit?usp=sharing&ouid=109500527499507575885&rtpof=true&sd=true" style="text-decoration: none;">
+					<button class="bttn-new-a">Ver más</button>
+				</a>
+			</div>
+		</div><!-- end container -->
+	</div><!-- end section -->
+	
+
+	<div id="testimonials" class="section wb">
+		<div class="container">
+			<div class="section-title text-center">
+				<h3>Información de Contacto</h3>
+				<p class="lead">Para cualquier duda o problema, no dude en contactarse con nosotros<br>Gracias a nuestros desarrolladores por hacer posible este proyecto</p>
+			</div><!-- end title -->
+	
+			<div class="row">
+				<div class="col-md-12 col-sm-12">
+					<div class="testi-carousel owl-carousel owl-theme">
+						<!-- Testimonial 1 -->
+						<div class="testimonial row align-items-center">
+							<div class="testi-meta col-md-5 text-center d-flex justify-content-center align-items-center" style="border-radius: 50px; background-color: #222124; padding: 20px;">
+								<img src="{{ url_for('static', filename='images/domisis.png') }}" alt="" class="img-fluid" style="max-height: 100%; max-width: 100%; border-radius: 50%;">
+							</div>
+							<div class="desc col-md-7">
+								<h3>Dominic Escalante</h3>
+								<p style="font-size: 18px; color: #A9A9A9; margin-top: 0px; margin-bottom: 0;">- Desarrollador</p>
+								<p style="font-size: 18px; color: #A9A9A9; font-style: italic; margin-top: 5px; margin-bottom: 0;">dominic.escalante@gmail.com -correo</p>
+								<p style="font-size: 18px; color: #A9A9A9; font-style: italic; margin-top: 0px; margin-bottom: 5;">domiescalante@gmail.com -github</p>
+							</div>				
+						</div>
+						<!-- Testimonial 2 -->
+						<div class="testimonial row align-items-center">
+							<div class="testi-meta col-md-5 text-center d-flex justify-content-center align-items-center" style="border-radius: 50px; background-color: #222124; padding: 20px;">
+								<img src="{{ url_for('static', filename='images/yosis.png') }}" alt="" class="img-fluid" style="max-height: 100%; max-width: 100%; border-radius: 50%;">
+							</div>
+							<div class="desc col-md-7">
+								<h3>Fernanda Mattos</h3>
+								<p style="font-size: 18px; color: #A9A9A9; margin-top: 0px; margin-bottom: 0;">- Desarrolladora</p>
+								<p style="font-size: 18px; color: #A9A9A9; font-style: italic; margin-top: 5px; margin-bottom: 0;"> fernanda.mattos@gmail.com -correo</p>
+								<p style="font-size: 18px; color: #A9A9A9; font-style: italic; margin-top: 0px; margin-bottom: 5;"> fmattosteran10@gmail.com -github</p>
+							</div>	
+						</div>
+						<!-- Testimonial 3 -->
+						<div class="testimonial row align-items-center">
+							<div class="testi-meta col-md-5 text-center d-flex justify-content-center align-items-center" style="border-radius: 50px; background-color: #222124; padding: 20px;">
+								<img src="{{ url_for('static', filename='images/dpdijkstra.png') }}" alt="" class="img-fluid" style="max-height: 100%; max-width: 100%; border-radius: 50%;">
+							</div>
+							<div class="desc col-md-7">
+								<h3>Jared Pimentel</h3>
+								<p style="font-size: 18px; color: #A9A9A9; margin-top: 0px; margin-bottom: 0;">- Desarrollador</p>
+								<p style="font-size: 18px; color: #A9A9A9; font-style: italic; margin-top: 5px; margin-bottom: 0;"> jared.pimentel@gmail.com -correo</p>
+								<p style="font-size: 18px; color: #A9A9A9; font-style: italic; margin-top: 0px; margin-bottom: 5;"> jared170209@gmail.com -github</p>
+							</div>	
+						</div>
+						<!-- Testimonial 2 -->
+						<div class="testimonial row align-items-center">
+							<div class="testi-meta col-md-5 text-center d-flex justify-content-center align-items-center" style="border-radius: 50px; background-color: #222124; padding: 20px;">
+								<img src="{{ url_for('static', filename='images/mateosis.png') }}" alt="" class="img-fluid" style="max-height: 100%; max-width: 100%; border-radius: 50%;">
+							</div>
+							<div class="desc col-md-7">
+								<h3>Mateo Valenzuela</h3>
+								<p style="font-size: 18px; color: #A9A9A9; margin-top: 0px; margin-bottom: 0;">- Desarrollador</p>
+								<p style="font-size: 18px; color: #A9A9A9; font-style: italic; margin-top: 5px; margin-bottom: 0;"> mateo.valenzuela@gmail.com -correo</p>
+								<p style="font-size: 18px; color: #A9A9A9; font-style: italic; margin-top: 0px; margin-bottom: 5;"> mateoxd@gmail.com -github</p>
+							</div>	
+						</div>
+					</div><!-- end carousel -->
+				</div><!-- end col -->
+			</div><!-- end row -->
+		</div><!-- end container -->
+	</div><!-- end section -->
+
+
+    <div id="support" class="section db">
+        <div class="container">
+            <div class="row">
+                <div id="logo-carousel" class="owl-carousel">
+				</div>
+            </div><!-- end row -->
+        </div><!-- end container -->
+    </div><!-- end section -->
+	
+	
+    <div class="copyrights">
+        <div class="container">
+            <div class="footer-distributed">
+                <div class="footer-left">
+                </div>
+            </div>
+        </div><!-- end container -->
+    </div><!-- end copyrights -->
+
+    <a href="#" id="scroll-to-top" class="dmtop global-radius"><i class="fa fa-angle-up"></i></a>
+
+    <!-- ALL JS FILES -->
+	<script src="{{ url_for('static', filename='js/all.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/custom.js') }}"></script>
+	<script src="{{ url_for('static', filename='js/tippy.all.min.js') }}"></script>
+	
+	<script type="text/javascript">	
+			$(function() {
+			
+				var Page = (function() {
+
+					var $nav = $( '#nav-dots > span' ),
+						slitslider = $( '#slider' ).slitslider( {
+							onBeforeChange : function( slide, pos ) {
+
+								$nav.removeClass( 'nav-dot-current' );
+								$nav.eq( pos ).addClass( 'nav-dot-current' );
+
+							}
+						} ),
+
+						init = function() {
+
+							initEvents();
+							
+						},
+						initEvents = function() {
+
+							$nav.each( function( i ) {
+							
+								$( this ).on( 'click', function( event ) {
+									
+									var $dot = $( this );
+									
+									if( !slitslider.isActive() ) {
+
+										$nav.removeClass( 'nav-dot-current' );
+										$dot.addClass( 'nav-dot-current' );
+									
+									}
+									
+									slitslider.jump( i + 1 );
+									return false;
+								
+								} );
+								
+							} );
+
+						};
+
+						return { init : init };
+
+				})();
+
+				Page.init();
+			
+			});
+		</script>
+		
+		<script>
+			tippy('.btn-a')
+		</script>
+
+
 </body>
 </html>
