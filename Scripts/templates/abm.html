@@ -463,7 +463,11 @@
     // Obtener opciones de puentes para el selector
     function fetchPuenteOptions() {
       axios
+<<<<<<< HEAD
         .get(`/puente`)
+=======
+        .get(`/abm/puente`)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           const puentes = response.data;
           const select = document.querySelector('select[name="id_puente"]');
@@ -487,7 +491,11 @@
       if (!id) return;
 
       axios
+<<<<<<< HEAD
         .get(`/puente?id_puente=${id}`)
+=======
+        .get(`/abm/puente?id_puente=${id}`)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           const data = response.data;
           document.querySelector('input[name="nombre_puente"]').value =
@@ -517,7 +525,11 @@
       }
 
       axios
+<<<<<<< HEAD
         .post(`/puente`, data)
+=======
+        .post(`/abm/puente`, data)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           showAlert("Operación exitosa", "success", 2000);
           console.log(response.data);
@@ -531,7 +543,11 @@
     // Mostrar tabla de puentes
     function fetchPuenteData() {
       axios
+<<<<<<< HEAD
         .get(`/puente`)
+=======
+        .get(`/abm/puente`)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           const data = response.data;
           const formContainer = document.getElementById("form-container");
@@ -574,7 +590,11 @@
     // Obtener opciones de galgas para el selector
     function fetchGalgaOptions() {
       axios
+<<<<<<< HEAD
         .get(`/galga`)
+=======
+        .get(`/abm/galga`)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           const galgas = response.data;
           const select = document.querySelector('select[name="id_galga"]');
@@ -598,7 +618,11 @@
       if (!id) return;
 
       axios
+<<<<<<< HEAD
         .get(`/galga?id_galga=${id}`)
+=======
+        .get(`/abm/galga?id_galga=${id}`)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           const data = response.data;
           document.querySelector('input[name="ubicacion_galga"]').value =
@@ -628,7 +652,11 @@
       }
 
       axios
+<<<<<<< HEAD
         .post(`/galga`, data)
+=======
+        .post(`/abm/galga`, data)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           showAlert("Operación exitosa", "success", 2000);
           console.log(response.data);
@@ -642,7 +670,11 @@
     // Mostrar tabla de galgas
     function fetchGalgaData() {
       axios
+<<<<<<< HEAD
         .get(`/galga`)
+=======
+        .get(`/abm/galga`)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           const data = response.data;
           const formContainer = document.getElementById("form-container");
@@ -758,7 +790,11 @@
     // Obtener opciones de datos para el selector
     function fetchDatosOptions() {
       axios
+<<<<<<< HEAD
         .get(`/datos_de_lectura`)
+=======
+        .get(`/abm/datos_de_lectura`)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           const datos = response.data;
           const select = document.querySelector('select[name="id_dato"]');
@@ -782,7 +818,11 @@
       if (!id) return;
 
       axios
+<<<<<<< HEAD
         .get(`/datos_de_lectura?id_dato=${id}`)
+=======
+        .get(`/abm/datos_de_lectura?id_dato=${id}`)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           const data = response.data;
 
@@ -819,7 +859,11 @@
       }
 
       axios
+<<<<<<< HEAD
         .post(`/datos_de_lectura`, data)
+=======
+        .post(`/abm/datos_de_lectura`, data)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           showAlert("Operación exitosa", "success", 2000);
           console.log(response.data);
@@ -833,7 +877,11 @@
     // Mostrar tabla de datos
     function fetchDatosData() {
       axios
+<<<<<<< HEAD
         .get(`/datos_de_lectura`)
+=======
+        .get(`/abm/datos_de_lectura`)
+>>>>>>> 3f3fbf12b0568a10fd6d615cf6a25f19351c0ed0
         .then((response) => {
           const data = response.data;
           const formContainer = document.getElementById("form-container");

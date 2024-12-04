@@ -3,12 +3,12 @@ import pandas as pd
 import numpy as np  # Importamos numpy para cálculos numéricos
 from sqlalchemy import create_engine
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 # Configuración de la base de datos
 db_config = {
-    'host': 'localhost',
-    'user': 'root',
+    'host': '192.168.1.206',
+    'user': 'fer',
     'password': '',
     'database': 'puentesdb'
 }
@@ -32,7 +32,7 @@ def index():
     """
     puentes_galgas = pd.read_sql(query_puentes_galgas, engine)
 
-    # Calcular el esfuerzo total por puente y el esfuerzo por galga
+    # Convertir a un formato JSON serializable
     puentes = []
     for (idPuente, nombre), group in puentes_galgas.groupby(['idPuente', 'nombre']):
         galgas_puente = group['idGalga'].dropna().astype(int).unique().tolist()
@@ -50,26 +50,27 @@ def index():
             porcentaje_esfuerzo = round(porcentaje_esfuerzo, 2)
 
             # Determinar el riesgo basado en el porcentaje de esfuerzo
-            if porcentaje_esfuerzo <= 50:
+            if porcentaje_esfuerzo <= 10:
                 riesgo = 'Buenas Condiciones'
-            elif porcentaje_esfuerzo <= 80:
+            elif porcentaje_esfuerzo <= 30:
                 riesgo = 'Necesita Mantenimiento'
             else:
                 riesgo = 'Peligro'
 
             galgas_info.append({
-                'idGalga': idGalga,
+                'idGalga': int(idGalga),  # Convertir a int para asegurar serialización
                 'porcentaje_esfuerzo': porcentaje_esfuerzo,
                 'riesgo': riesgo
             })
         puente = {
-            'idPuente': idPuente,
+            'idPuente': int(idPuente),  # Convertir a int para asegurar serialización
             'nombre': nombre,
             'galgas': galgas_info
         }
         puentes.append(puente)
 
     return render_template('index.html', galgas=galgas, puentes=puentes)
+
 
 # Rutas API existentes
 @app.route('/api/galga/<int:id_galga>')
