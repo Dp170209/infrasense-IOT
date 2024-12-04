@@ -1,20 +1,240 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 
 <head>
-    <title>Register</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+    <!-- Bootstrap 5 -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        /* Fondo con imagen de la ciudad de La Paz, Bolivia (puedes poner una URL específica aquí) */
+        body {
+            background: url('https://www.todoturismosrl.com/images/283603-la-paz2.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Poppins', sans-serif;
+            color: #fff;
+            height: 100vh;
+            margin: 0;
+        }
+
+        .container {
+            max-width: 500px;
+            background: rgba(0, 0, 0, 0.7);
+            /* Fondo oscuro translúcido */
+            padding: 40px;
+            border-radius: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.3);
+            margin-top: 100px;
+            backdrop-filter: blur(5px);
+            /* Añadir desenfoque al fondo */
+        }
+
+        h2 {
+            text-align: center;
+            color: #f7b42c;
+            margin-bottom: 30px;
+            font-weight: 600;
+        }
+
+        p {
+            text-align: center;
+            color: #fff;
+        }
+
+        a {
+            color: #f7b42c;
+            text-decoration: none;
+        }
+
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .form-label {
+            font-weight: 500;
+            color: #f7b42c;
+        }
+
+        .form-control {
+            border-radius: 8px;
+            padding: 10px;
+            box-shadow: none;
+            transition: 0.3s ease;
+            background: #333;
+            color: #fff;
+        }
+
+        .form-control:focus {
+            border-color: #f7b42c;
+            box-shadow: 0 0 8px rgba(247, 180, 44, 0.5);
+        }
+
+        .btn-primary {
+            background-color: #f7b42c;
+            border-color: #f7b42c;
+            font-size: 16px;
+            padding: 12px 24px;
+            border-radius: 8px;
+            width: 100%;
+            transition: background-color 0.3s ease;
+            font-weight: bold;
+        }
+
+        .btn-primary:hover {
+            background-color: #d29e2a;
+        }
+
+        .btn-close {
+            background-color: #f7b42c;
+        }
+
+        /* Modal */
+        .modal-content {
+            border-radius: 10px;
+            background: #222;
+            color: #fff;
+        }
+
+        .modal-header {
+            background-color: #f7b42c;
+            color: #fff;
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+        }
+
+        .modal-body {
+            font-size: 16px;
+        }
+
+        .modal-footer button {
+            border-radius: 8px;
+            font-weight: bold;
+        }
+
+        /* Iconos */
+        .form-control,
+        .btn-close {
+            background-color: transparent;
+            border: 1px solid #f7b42c;
+            color: #f7b42c;
+        }
+
+        .form-control::placeholder {
+            color: #bbb;
+        }
+
+        .modal-body p {
+            text-align: center;
+        }
+
+        .icon {
+            font-size: 50px;
+            color: #f7b42c;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+    </style>
 </head>
 
 <body>
-    <h2>Registro</h2>
-    <form method="POST">
-        <label for="email">Correo Electronico:</label>
-        <input type="email" id="email" name="email" required><br><br>
-        <label for="password">Password:</label>
-        <input type="password" id="password" name="password" required><br><br>
-        <button type="submit">Registrarse</button>
-    </form>
-    <p>Ya tienes cuenta? <a href="{{ url_for('login.login') }}">Inicia sesión</a></p>
+    <div class="container">
+        <h2>Crear Cuenta</h2>
+        <!-- Icono de registro -->
+        <div class="icon">
+            <i class="bi bi-person-circle"></i>
+        </div>
+        <form id="registerForm">
+            <div class="mb-3">
+                <label for="email" class="form-label">Correo Electrónico</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Introduce tu correo"
+                    required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Contraseña</label>
+                <input type="password" class="form-control" id="password" name="password"
+                    placeholder="Introduce tu contraseña" required>
+            </div>
+            <button type="submit" class="btn btn-primary">Registrar</button>
+            <p>Ya tienes una cuenta? <a href="{{ url_for('login.login') }}">Ingresa aquí</a></p>
+        </form>
+    </div>
+
+    <!-- Modal para verificación -->
+    <div class="modal fade" id="verificationModal" tabindex="-1" aria-labelledby="verificationModalLabel"
+        aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="verificationModalLabel">Verificar Código</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Te hemos enviado un código de verificación a tu correo. Ingresa el código aquí para completar tu
+                        registro.</p>
+                    <div class="mb-3">
+                        <label for="verificationCode" class="form-label">Código de Verificación</label>
+                        <input type="text" class="form-control" id="verificationCode" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" id="verifyButton">Verificar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Scripts de Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        document.getElementById('registerForm').onsubmit = function (e) {
+            e.preventDefault();  // Prevenir el envío del formulario de manera tradicional
+
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            fetch('/register', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'  // Enviar JSON al backend
+                },
+                body: JSON.stringify({ email: email, password: password })
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Mostrar el modal de verificación
+                        const modal = new bootstrap.Modal(document.getElementById('verificationModal'));
+                        modal.show();
+                    } else {
+                        alert(data.message || 'Error al registrarse');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        };
+
+        // Verificar el código
+        document.getElementById('verifyButton').onclick = function () {
+            const verificationCode = document.getElementById('verificationCode').value;
+
+            fetch('/register/verify_code', {
+                method: 'POST',
+                body: JSON.stringify({ code: verificationCode }),
+                headers: { 'Content-Type': 'application/json' }
+            })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Registro completado correctamente');
+                        window.location.href = '/login'; // Redirigir al login
+                    } else {
+                        alert('El código es incorrecto. Inténtalo de nuevo.');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+        };
+    </script>
 </body>
 
 </html>
