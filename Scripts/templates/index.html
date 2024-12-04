@@ -122,16 +122,19 @@
             display: flex;                /* Utiliza flexbox para centrar contenido */
             justify-content: center;      /* Centra horizontalmente */
             align-items: center;          /* Centra verticalmente */
-            height: 650px;                /* Altura del contenedor, ajusta según sea necesario */
+            height: 800px;                /* Incrementar la altura del contenedor */
+            width: 100%;                  /* Asegurar que el contenedor ocupe todo el ancho disponible */
+            margin-top: 20px;             /* Espacio adicional para separarlo del título */
+        }
+
+        #barChart {
+            max-width: 900px;             /* Ajustar el tamaño máximo del gráfico */
+            max-height: 700px;            /* Ajustar el tamaño máximo del gráfico */
         }
 
         #pieChart {
             max-width: 650px;             /* Ajusta el tamaño máximo del gráfico */
             max-height: 650px;            /* Ajusta el tamaño máximo del gráfico */
-        }
-        #barChart {
-            max-width: 800px;
-            margin: 0 auto;
         }
     </style>
 </head>
@@ -272,7 +275,7 @@
 
         <!-- Contenedor para el gráfico de barras apiladas -->
         <div class="container mt-5">
-            <h2 class="text-center">Cargas promedio de deformación por puente y ubicación</h2>
+            <h2 class="text-center">Promedio de peso segun ubicacion por cada puente</h2>
             <div class="d-flex justify-content-around mt-3">
                 <button id="showBarChartButton" class="btn btn-primary">Mostrar Gráfico de Barras Apiladas</button>
             </div>
@@ -285,36 +288,62 @@
 
     <!-- Script JavaScript -->
     <script>
-
-        // Función para obtener datos y renderizar la gráfica de barras apiladas
         async function renderBarChart() {
             try {
                 const response = await fetch('/api/grafica_barras_apiladas');
                 const data = await response.json();
 
                 // Verificar si hay datos disponibles
-                if (data.length === 0) {
+                if (!data.labels || data.labels.length === 0) {
                     alert('No hay datos disponibles para generar la gráfica.');
                     return;
                 }
 
-                // Preparar etiquetas, datos y colores para el gráfico de barras apiladas
-                const labels = data.map(item => item.puente);
-                const ubicaciones = [...new Set(data.flatMap(item => Object.keys(item)).filter(key => key !== 'puente'))];
-                const datasets = ubicaciones.map((ubicacion, index) => {
+                // Preparar las etiquetas y datasets para el gráfico
+                const labels = data.labels;
+
+                // Definir una paleta de colores específica para cada puente
+                const colorPalette = [
+                    'rgba(54, 162, 235, 0.7)', // Azul para Puente de las Americas
+                    'rgba(255, 99, 132, 0.7)',  // Rojo para Puentes Gemelos
+                    'rgba(75, 192, 192, 0.7)',  // Verde para San Antonio
+                    'rgba(153, 102, 255, 0.7)'  // Morado para Trillizos
+                ];
+
+                // Crear un conjunto de todas las ubicaciones posibles
+                const todasLasUbicaciones = [...new Set(data.datasets.flatMap(dataset => dataset.label))];
+
+                // Crear un mapa de datasets para asegurarse de que todas las ubicaciones se incluyan
+                const datasetsMap = todasLasUbicaciones.reduce((acc, ubicacion) => {
+                    acc[ubicacion] = Array(labels.length).fill(0);
+                    return acc;
+                }, {});
+
+                // Llenar los datos para cada ubicación basados en los valores existentes en el JSON
+                data.datasets.forEach(dataset => {
+                    dataset.data.forEach((value, index) => {
+                        datasetsMap[dataset.label][index] = value;
+                    });
+                });
+
+                // Crear datasets para la gráfica de barras apiladas
+                const datasets = Object.keys(datasetsMap).map((ubicacion, index) => {
                     return {
                         label: ubicacion,
-                        data: data.map(item => item[ubicacion] || 0),
-                        backgroundColor: colorPalette[index % colorPalette.length]
+                        data: datasetsMap[ubicacion],
+                        backgroundColor: colorPalette[index % colorPalette.length], // Asignar el color adecuado según la ubicación
+                        borderWidth: 1
                     };
                 });
 
-                // Crear el gráfico de barras apiladas o actualizar el existente
+                // Crear el gráfico de barras o actualizar el existente
                 if (window.barChartInstance) {
+                    // Actualizar el gráfico existente
                     window.barChartInstance.data.labels = labels;
                     window.barChartInstance.data.datasets = datasets;
                     window.barChartInstance.update();
                 } else {
+                    // Crear un nuevo gráfico de barras
                     window.barChartInstance = new Chart(document.getElementById('barChart'), {
                         type: 'bar',
                         data: {
@@ -329,8 +358,8 @@
                                 },
                                 tooltip: {
                                     callbacks: {
-                                        label: function(context) {
-                                            return context.dataset.label + ': ' + context.raw + ' kg';
+                                        label: function (tooltipItem) {
+                                            return tooltipItem.dataset.label + ': ' + tooltipItem.raw.toFixed(2) + ' kg';
                                         }
                                     }
                                 }
@@ -341,14 +370,19 @@
                                     title: {
                                         display: true,
                                         text: 'Puentes'
+                                    },
+                                    ticks: {
+                                        maxRotation: 0, // Cambiar la rotación a 0 grados para mejorar la legibilidad
+                                        minRotation: 0
                                     }
                                 },
                                 y: {
                                     stacked: true,
                                     title: {
                                         display: true,
-                                        text: 'Magnitud de Carga / Deformación (kg)'
-                                    }
+                                        text: 'Promedio de peso (kg)'
+                                    },
+                                    beginAtZero: true // Comienza la escala en cero para claridad
                                 }
                             }
                         }
@@ -358,6 +392,11 @@
                 console.error('Error al obtener datos para el gráfico de barras apiladas:', error);
             }
         }
+
+
+
+
+
 
         // Evento para el botón de mostrar gráfico de barras apiladas
         document.getElementById('showBarChartButton').addEventListener('click', () => {
