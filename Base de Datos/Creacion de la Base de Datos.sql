@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 26-11-2024 a las 03:52:50
+-- Tiempo de generación: 04-12-2024 a las 19:08:14
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -11,9 +11,6 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
--- Crear la base de datos
-CREATE DATABASE IF NOT EXISTS `puentesdb` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `puentesdb`;
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -23,6 +20,10 @@ USE `puentesdb`;
 --
 -- Base de datos: `puentesdb`
 --
+
+-- Crear la base de datos
+CREATE DATABASE IF NOT EXISTS `puentesdb` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `puentesdb`;
 
 -- --------------------------------------------------------
 
@@ -63,6 +64,19 @@ CREATE TABLE `puente` (
   `ubicacion` varchar(50) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuario`
+--
+
+CREATE TABLE `usuario` (
+  `idUsuario` int(11) NOT NULL,
+  `correo` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `rol` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
 --
 -- Índices para tablas volcadas
 --
@@ -88,6 +102,12 @@ ALTER TABLE `puente`
   ADD PRIMARY KEY (`idPuente`);
 
 --
+-- Indices de la tabla `usuario`
+--
+ALTER TABLE `usuario`
+  ADD PRIMARY KEY (`idUsuario`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
@@ -101,13 +121,19 @@ ALTER TABLE `datos_de_lectura`
 -- AUTO_INCREMENT de la tabla `galga`
 --
 ALTER TABLE `galga`
-  MODIFY `idGalga` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=28;
+  MODIFY `idGalga` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=35;
 
 --
 -- AUTO_INCREMENT de la tabla `puente`
 --
 ALTER TABLE `puente`
   MODIFY `idPuente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT de la tabla `usuario`
+--
+ALTER TABLE `usuario`
+  MODIFY `idUsuario` int(11) NOT NULL AUTO_INCREMENT;
 
 --
 -- Restricciones para tablas volcadas

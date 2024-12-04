@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 28-11-2024 a las 01:15:27
+-- Tiempo de generación: 04-12-2024 a las 19:04:02
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -11,9 +11,6 @@ SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
 SET time_zone = "+00:00";
 
--- Crear la base de datos
-CREATE DATABASE IF NOT EXISTS `puentesdb` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
-USE `puentesdb`;
 
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -24,6 +21,9 @@ USE `puentesdb`;
 -- Base de datos: `puentesdb`
 --
 
+-- Crear la base de datos
+CREATE DATABASE IF NOT EXISTS `puentesdb` CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci;
+USE `puentesdb`;
 -- --------------------------------------------------------
 
 --
@@ -492,17 +492,25 @@ INSERT INTO `puente` (`idPuente`, `nombre`, `ubicacion`) VALUES
 (3, 'Puentes gemelos', 'Sopocachi-Miraflores'),
 (4, 'Puente de las Americas', 'Sopocachi');
 
-CREATE TABLE usuario (
-    idUsuario int  NOT NULL AUTO_INCREMENT,
-    correo varchar(50)  NOT NULL,
-    password varchar(30)  NOT NULL,
-    rol int  NOT NULL,
-    CONSTRAINT usuario_pk PRIMARY KEY (idUsuario)
-);
+-- --------------------------------------------------------
+
+--
+-- Estructura de tabla para la tabla `usuario`
+--
+
+CREATE TABLE `usuario` (
+  `idUsuario` int(11) NOT NULL,
+  `correo` varchar(50) NOT NULL,
+  `password` varchar(255) NOT NULL,
+  `rol` int(11) NOT NULL
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `usuario`
+--
 
 INSERT INTO `usuario` (`idUsuario`, `correo`, `password`, `rol`) VALUES
-(1, 'dominic@ucb.edu.bo', '123', 1),
-(2, 'dominic@gmail.com', '123', 2);
+(4, 'mateo.valenzuela@ucb.edu.bo', 'e09c2ecbe750bcc6d2395c0da1abf448d5600744e664fb531ecb211a42166dd4', 1);
 
 --
 -- Índices para tablas volcadas
@@ -529,6 +537,12 @@ ALTER TABLE `puente`
   ADD PRIMARY KEY (`idPuente`);
 
 --
+-- Indices de la tabla `usuario`
+--
+ALTER TABLE `usuario`
+  ADD PRIMARY KEY (`idUsuario`);
+
+--
 -- AUTO_INCREMENT de las tablas volcadas
 --
 
@@ -549,6 +563,12 @@ ALTER TABLE `galga`
 --
 ALTER TABLE `puente`
   MODIFY `idPuente` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
+
+--
+-- AUTO_INCREMENT de la tabla `usuario`
+--
+ALTER TABLE `usuario`
+  MODIFY `idUsuario` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=5;
 
 --
 -- Restricciones para tablas volcadas
