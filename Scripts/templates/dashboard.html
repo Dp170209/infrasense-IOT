@@ -11,6 +11,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns"></script>
     <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-zoom@1.2.1"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+
 
     <style>
         #chart {
@@ -411,65 +413,76 @@
         });
 
 
-    // Función para obtener datos de la deformación por ubicación y renderizar el gráfico de torta
-    async function renderPieChart(idPuente) {
-        try {
-            const response = await fetch(`/api/deformacion_por_ubicacion/${idPuente}`);
-            const data = await response.json();
+        async function renderPieChart(idPuente) {
+    try {
+        const response = await fetch(`/api/deformacion_por_ubicacion/${idPuente}`);
+        const data = await response.json();
 
-            // Verificar si hay datos disponibles para el puente seleccionado
-            if (data.length === 0) {
-                alert('No hay datos disponibles para este puente.');
-                return;
-            }
+        // Verificar si hay datos disponibles para el puente seleccionado
+        if (data.length === 0) {
+            alert('No hay datos disponibles para este puente.');
+            return;
+        }
 
-            // Preparar etiquetas y datos para el gráfico de torta
-            const labels = data.map(item => item.ubicacion);
-            const valores = data.map(item => item.peso_total);
+        // Preparar etiquetas y datos para el gráfico de torta
+        const labels = data.map(item => item.ubicacion);
+        const valores = data.map(item => item.peso_total);
 
-            // Definir colores para cada sector de la torta
-            const colors = [
-                '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
-            ];
+        // Definir colores para cada sector de la torta
+        const colors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40'
+        ];
 
-            // Crear el gráfico de torta o actualizar el existente
-            if (window.pieChartInstance) {
-                // Actualizar el gráfico existente
-                window.pieChartInstance.data.labels = labels;
-                window.pieChartInstance.data.datasets[0].data = valores;
-                window.pieChartInstance.update();
-            } else {
-                // Crear un nuevo gráfico de torta
-                window.pieChartInstance = new Chart(document.getElementById('pieChart'), {
-                    type: 'pie',
-                    data: {
-                        labels: labels,
-                        datasets: [{
-                            data: valores,
-                            backgroundColor: colors,
-                        }]
-                    },
-                    options: {
-                        responsive: true,
-                        plugins: {
-                            legend: {
-                                position: 'top',
-                            },
-                            tooltip: {
-                                callbacks: {
-                                    label: function(tooltipItem) {
-                                        return labels[tooltipItem.dataIndex] + ': ' + valores[tooltipItem.dataIndex] + ' kg';
-                                    }
+        // Crear el gráfico de torta o actualizar el existente
+        if (window.pieChartInstance) {
+            // Actualizar el gráfico existente
+            window.pieChartInstance.data.labels = labels;
+            window.pieChartInstance.data.datasets[0].data = valores;
+            window.pieChartInstance.update();
+        } else {
+            // Crear un nuevo gráfico de torta
+            window.pieChartInstance = new Chart(document.getElementById('pieChart'), {
+                type: 'pie',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: valores,
+                        backgroundColor: colors,
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(tooltipItem) {
+                                    return labels[tooltipItem.dataIndex] + ': ' + valores[tooltipItem.dataIndex] + ' kg';
                                 }
                             }
+                        },
+                        datalabels: {
+                            color: '#fff', // Color del texto (blanco para contraste)
+                            formatter: (value) => `${value.toFixed(2)} kg`, // Mostrar el valor con el sufijo "kg"
+                            font: {
+                                weight: 'bold',
+                                size: 14,
+                            },
+                            anchor: 'center',
+                            align: 'center'
                         }
                     }
-                });
-            }
-        } catch (error) {
-            console.error('Error al obtener datos para el gráfico de torta:', error);
+                },
+                plugins: [ChartDataLabels] // Agregar el plugin de etiquetas
+            });
         }
+    } catch (error) {
+        console.error('Error al obtener datos para el gráfico de torta:', error);
     }
+}
+
 
     // Evento para el botón de mostrar gráfico de torta
     document.getElementById('showPieChartButton').addEventListener('click', () => {
