@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for, flash, session
-from werkzeug.security import check_password_hash
+from flask import Blueprint, render_template, request, flash, session
 import mysql.connector
+import hashlib
 
 login_bp = Blueprint('login', __name__)
 
@@ -15,18 +15,27 @@ db_config = {
 def get_db_connection():
     return mysql.connector.connect(db_config)
 
+def hash_password(password):
+    """Genera el hash de la contraseña usando SHA-256"""
+    return hashlib.sha256(password.encode()).hexdigest()
+
 @login_bp.route('/', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         email = request.form['email']
         password = request.form['password']
 
+        # Generar el hash de la contraseña proporcionada por el usuario
+        hashed_password = hash_password(password)
+
+        print(hashed_password)
+
         conn = mysql.connector.connect(**db_config)
         cursor = conn.cursor(dictionary=True)
 
-        # Verificar credenciales
+        # Verificar credenciales con el hash
         query = "SELECT * FROM usuario WHERE correo = %s AND password = %s"
-        cursor.execute(query, (email, password))
+        cursor.execute(query, (email, hashed_password))
         user = cursor.fetchone()
 
         conn.close()
@@ -43,12 +52,10 @@ def login():
             session['role'] = user['rol']
             session.permanent = True
 
-            if 'user_id' in session:
-                return render_template('home.html', logged_in=True)  # Si está autenticado, pasamos logged_in=True
-            else:
-                return render_template('home.html', logged_in=False)  # Si no está autenticado, pasamos logged_in=False
+            return render_template('home.html', logged_in=True)  # Si está autenticado, pasamos logged_in=True
         else:
             flash('Credenciales incorrectas. Intenta nuevamente.')
+            print("No")
             return render_template('login.html')
 
     return render_template('login.html')
