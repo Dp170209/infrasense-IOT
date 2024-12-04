@@ -10,7 +10,7 @@ register_bp = Blueprint('register', __name__)
 
 db_config = {
     'host': 'localhost',
-    'user': 'dom',
+    'user': 'iot',
     'password': '',
     'database': 'puentesdb'
 }
