@@ -492,6 +492,18 @@ INSERT INTO `puente` (`idPuente`, `nombre`, `ubicacion`) VALUES
 (3, 'Puentes gemelos', 'Sopocachi-Miraflores'),
 (4, 'Puente de las Americas', 'Sopocachi');
 
+CREATE TABLE usuario (
+    idUsuario int  NOT NULL AUTO_INCREMENT,
+    correo varchar(50)  NOT NULL,
+    password varchar(30)  NOT NULL,
+    rol int  NOT NULL,
+    CONSTRAINT usuario_pk PRIMARY KEY (idUsuario)
+);
+
+INSERT INTO `usuario` (`idUsuario`, `correo`, `password`, `rol`) VALUES
+(1, 'dominic@ucb.edu.bo', '123', 1),
+(2, 'dominic@gmail.com', '123', 2);
+
 --
 -- Índices para tablas volcadas
 --
