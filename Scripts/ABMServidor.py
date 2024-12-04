@@ -5,9 +5,9 @@ from datetime import datetime
 abm_bp = Blueprint('abm', __name__)
 
 # PHP Backend URLs
-URL_PUENTE = "http://192.168.1.211/infrasense-IOT/Scripts/puente.php"
-URL_GALGA = "http://192.168.1.211/infrasense-IOT/Scripts/galga.php"
-URL_DATOS = "http://192.168.1.211/infrasense-IOT/Scripts/datos.php"
+URL_PUENTE = "http://localhost/infrasense-IOT/Scripts/puente.php"
+URL_GALGA = "http://localhost/infrasense-IOT/Scripts/galga.php"
+URL_DATOS = "http://localhost/infrasense-IOT/Scripts/datos.php"
 
 @abm_bp.route("/puente", methods=["POST", "GET"])
 def puente():
@@ -50,4 +50,3 @@ def datos():
         else:
             response = requests.get(URL_DATOS)
         return jsonify(response.json())
-

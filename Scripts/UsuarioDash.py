@@ -1,9 +1,9 @@
-from flask import Flask, render_template, jsonify
+from flask import Blueprint, Flask, render_template, jsonify
 import pandas as pd
 import numpy as np  # Importamos numpy para cálculos numéricos
 from sqlalchemy import create_engine
 
-app = Flask(__name__, static_url_path='/static', static_folder='static')
+userDashboard_bp = Blueprint('userDashboard', __name__, template_folder='templates')
 
 # Configuración de la base de datos
 db_config = {
@@ -16,8 +16,8 @@ db_config = {
 # Crear conexión con SQLAlchemy
 engine = create_engine(f"mysql+mysqlconnector://{db_config['user']}:{db_config['password']}@{db_config['host']}/{db_config['database']}")
 
-@app.route('/')
-def index():
+@userDashboard_bp.route('/')
+def user_dashboard():
     # Obtener la lista de galgas
     query_galgas = "SELECT DISTINCT idGalga FROM datos_de_lectura"
     galgas = pd.read_sql(query_galgas, engine)['idGalga'].tolist()
@@ -71,7 +71,7 @@ def index():
 
     return render_template('usuario.html', galgas=galgas, puentes=puentes)
 
-@app.route('/api/puentes')
+@userDashboard_bp.route('/api/puentes')
 def get_puentes():
     # Obtener los puentes y sus galgas asociadas con sus datos de esfuerzo
     query_puentes_galgas = """
@@ -121,6 +121,3 @@ def get_puentes():
         puentes.append(puente)
 
     return jsonify(puentes)
-
-if __name__ == '__main__':
-    app.run(debug=True)

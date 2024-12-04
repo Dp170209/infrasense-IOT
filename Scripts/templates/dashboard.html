@@ -79,9 +79,11 @@
             0% {
                 box-shadow: 0 0 0 0 rgba(0, 123, 255, 0.7);
             }
+
             70% {
                 box-shadow: 0 0 20px 10px rgba(0, 123, 255, 0);
             }
+
             100% {
                 box-shadow: 0 0 0 0 rgba(0, 123, 255, 0);
             }
@@ -187,7 +189,7 @@
 
         <!-- Imagen del Puente con Botones -->
         <div class="bridge-container">
-            <img src="/static/images/bridge.png" alt="Puente" class="bridge-image">
+            <img src="/static/bridge.png" alt="Puente" class="bridge-image">
             <button id="btn1" class="bridge-button" onclick="handleBridgeClick(1)">G1</button>
             <button id="btn2" class="bridge-button" onclick="handleBridgeClick(2)">G2</button>
             <button id="btn3" class="bridge-button" onclick="handleBridgeClick(3)">G3</button>
@@ -243,41 +245,8 @@
     <!-- Script JavaScript -->
     <script>
         document.addEventListener('DOMContentLoaded', function () {
-        // Obtenemos los datos de los puentes y galgas desde el contexto de Flask
-        const puentes = JSON.parse('{{ puentes | tojson | safe }}');
-        
-        // Recorremos las galgas para cambiar el color de los botones según el riesgo
-        puentes.forEach(puente => {
-            puente.galgas.forEach(galga => {
-                const galgaId = galga.idGalga;
-                const riesgo = galga.riesgo;
-
-                // Selecciona el botón por ID de galga
-                const button = document.getElementById(`btn${galgaId}`);
-                if (button) {
-                    // Cambiar el color del botón según el estado de riesgo
-                    if (riesgo === 'Buenas Condiciones') {
-                        button.style.backgroundColor = '#28a745'; // Verde
-                    } else if (riesgo === 'Necesita Mantenimiento') {
-                        button.style.backgroundColor = '#ffc107'; // Amarillo
-                    } else if (riesgo === 'Peligro') {
-                        button.style.backgroundColor = '#dc3545'; // Rojo
-                    }
-                }
-            });
-        });
-    });
-
-    document.addEventListener('DOMContentLoaded', function () {
-        // Obtenemos los datos de los puentes y galgas desde el contexto de Flask
-        const puentes = JSON.parse('{{ puentes | tojson | safe }}');
-        
-        // Recorremos las galgas para cambiar el color de los botones según el riesgo al cargar la página
-        updateButtonsAndTable(puentes);
-
-        function updateButtonsAndTable(puentes) {
-            const warningContainer = document.getElementById('warningContainer');
-            warningContainer.innerHTML = ''; // Limpiar advertencias anteriores
+            // Obtenemos los datos de los puentes y galgas desde el contexto de Flask
+            const puentes = JSON.parse('{{ puentes | tojson | safe }}');
 
             // Recorremos las galgas para cambiar el color de los botones según el riesgo
             puentes.forEach(puente => {
@@ -295,24 +264,57 @@
                             button.style.backgroundColor = '#ffc107'; // Amarillo
                         } else if (riesgo === 'Peligro') {
                             button.style.backgroundColor = '#dc3545'; // Rojo
-
-                            // Añadir advertencia para galgas en estado de peligro
-                            const warningMessage = document.createElement('div');
-                            warningMessage.className = 'alert alert-danger mt-3';
-                            warningMessage.role = 'alert';
-                            warningMessage.innerHTML = `⚠️ La galga <strong>${galgaId}</strong> del puente <strong>${puente.nombre}</strong> está en condiciones peligrosas.`;
-                            warningContainer.appendChild(warningMessage);
                         }
                     }
                 });
             });
+        });
 
-            // Actualizar la tabla de puentes y galgas asociadas
-            const tableBody = document.querySelector('table tbody');
-            tableBody.innerHTML = ''; // Limpiar el contenido actual
-            puentes.forEach(puente => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
+        document.addEventListener('DOMContentLoaded', function () {
+            // Obtenemos los datos de los puentes y galgas desde el contexto de Flask
+            const puentes = JSON.parse('{{ puentes | tojson | safe }}');
+
+            // Recorremos las galgas para cambiar el color de los botones según el riesgo al cargar la página
+            updateButtonsAndTable(puentes);
+
+            function updateButtonsAndTable(puentes) {
+                const warningContainer = document.getElementById('warningContainer');
+                warningContainer.innerHTML = ''; // Limpiar advertencias anteriores
+
+                // Recorremos las galgas para cambiar el color de los botones según el riesgo
+                puentes.forEach(puente => {
+                    puente.galgas.forEach(galga => {
+                        const galgaId = galga.idGalga;
+                        const riesgo = galga.riesgo;
+
+                        // Selecciona el botón por ID de galga
+                        const button = document.getElementById(`btn${galgaId}`);
+                        if (button) {
+                            // Cambiar el color del botón según el estado de riesgo
+                            if (riesgo === 'Buenas Condiciones') {
+                                button.style.backgroundColor = '#28a745'; // Verde
+                            } else if (riesgo === 'Necesita Mantenimiento') {
+                                button.style.backgroundColor = '#ffc107'; // Amarillo
+                            } else if (riesgo === 'Peligro') {
+                                button.style.backgroundColor = '#dc3545'; // Rojo
+
+                                // Añadir advertencia para galgas en estado de peligro
+                                const warningMessage = document.createElement('div');
+                                warningMessage.className = 'alert alert-danger mt-3';
+                                warningMessage.role = 'alert';
+                                warningMessage.innerHTML = `⚠️ La galga <strong>${galgaId}</strong> del puente <strong>${puente.nombre}</strong> está en condiciones peligrosas.`;
+                                warningContainer.appendChild(warningMessage);
+                            }
+                        }
+                    });
+                });
+
+                // Actualizar la tabla de puentes y galgas asociadas
+                const tableBody = document.querySelector('table tbody');
+                tableBody.innerHTML = ''; // Limpiar el contenido actual
+                puentes.forEach(puente => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
                     <td>${puente.nombre}</td>
                     <td>${puente.galgas.length ? puente.galgas.map(galga => galga.idGalga).join(', ') : 'No hay galgas asociadas'}</td>
                     <td>${puente.galgas.length ? puente.galgas.map(galga => `Galga ${galga.idGalga}: ${galga.porcentaje_esfuerzo}%`).join('<br>') : 'N/A'}</td>
@@ -328,22 +330,22 @@
                         }
                     }).join('<br>') : 'N/A'}</td>
                 `;
-                tableBody.appendChild(row);
-            });
-        }
+                    tableBody.appendChild(row);
+                });
+            }
+
+            // Manejar clics en los botones de la imagen del puente
+            function handleBridgeClick(galgaId) {
+                alert('Información de la Galga ' + galgaId);
+                // Aquí puedes agregar lógica adicional, como mostrar detalles específicos de cada galga
+            }
+        });
 
         // Manejar clics en los botones de la imagen del puente
         function handleBridgeClick(galgaId) {
             alert('Información de la Galga ' + galgaId);
             // Aquí puedes agregar lógica adicional, como mostrar detalles específicos de cada galga
         }
-    });
-
-    // Manejar clics en los botones de la imagen del puente
-    function handleBridgeClick(galgaId) {
-        alert('Información de la Galga ' + galgaId);
-        // Aquí puedes agregar lógica adicional, como mostrar detalles específicos de cada galga
-    }
 
         const galgaSelector = document.getElementById('galgaSelector');
         const puenteSelector = document.getElementById('puenteSelector');
