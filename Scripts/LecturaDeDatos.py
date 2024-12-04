@@ -1,13 +1,14 @@
 from flask import Blueprint, Flask, render_template, jsonify
+import matplotlib as plt
 import pandas as pd
 import numpy as np  # Importamos numpy para cálculos numéricos
 from sqlalchemy import create_engine
-dashboard_bp = Blueprint('dashboard', __name__, template_folder='templates')
 
+dashboard_bp = Blueprint('dashboard', __name__, template_folder='templates',static_url_path='/static', static_folder='static')
 # Configuración de la base de datos
 db_config = {
     'host': 'localhost',
-    'user': 'dom',
+    'user': 'root',
     'password': '',
     'database': 'puentesdb'
 }
@@ -17,9 +18,11 @@ engine = create_engine(f"mysql+mysqlconnector://{db_config['user']}:{db_config['
 
 @dashboard_bp.route('/')
 def dashboard_home():
+    # Obtener la lista de galgas
     query_galgas = "SELECT DISTINCT idGalga FROM datos_de_lectura"
     galgas = pd.read_sql(query_galgas, engine)['idGalga'].tolist()
 
+    # Obtener los puentes y sus galgas asociadas con sus datos de esfuerzo
     query_puentes_galgas = """
     SELECT puente.idPuente, puente.nombre, galga.idGalga, datos_de_lectura.peso
     FROM puente
@@ -29,18 +32,24 @@ def dashboard_home():
     """
     puentes_galgas = pd.read_sql(query_puentes_galgas, engine)
 
+    # Convertir a un formato JSON serializable
     puentes = []
     for (idPuente, nombre), group in puentes_galgas.groupby(['idPuente', 'nombre']):
         galgas_puente = group['idGalga'].dropna().astype(int).unique().tolist()
+        # Calcular el esfuerzo total del puente (suma de los pesos de sus galgas)
         esfuerzo_total = group['peso'].sum()
         galgas_info = []
         for idGalga in galgas_puente:
+            # Calcular el esfuerzo de la galga (suma de sus pesos)
             esfuerzo_galga = group[group['idGalga'] == idGalga]['peso'].sum()
+            # Calcular el porcentaje de esfuerzo
             if esfuerzo_total > 0:
                 porcentaje_esfuerzo = (esfuerzo_galga / esfuerzo_total) * 100
             else:
                 porcentaje_esfuerzo = 0
             porcentaje_esfuerzo = round(porcentaje_esfuerzo, 2)
+
+            # Determinar el riesgo basado en el porcentaje de esfuerzo
             if porcentaje_esfuerzo <= 10:
                 riesgo = 'Buenas Condiciones'
             elif porcentaje_esfuerzo <= 30:
@@ -49,18 +58,19 @@ def dashboard_home():
                 riesgo = 'Peligro'
 
             galgas_info.append({
-                'idGalga': int(idGalga),
+                'idGalga': int(idGalga),  # Convertir a int para asegurar serialización
                 'porcentaje_esfuerzo': porcentaje_esfuerzo,
                 'riesgo': riesgo
             })
         puente = {
-            'idPuente': int(idPuente),
+            'idPuente': int(idPuente),  # Convertir a int para asegurar serialización
             'nombre': nombre,
             'galgas': galgas_info
         }
         puentes.append(puente)
 
     return render_template('dashboard.html', galgas=galgas, puentes=puentes)
+
 
 # Rutas API existentes
 @dashboard_bp.route('/api/galga/<int:id_galga>')
@@ -154,3 +164,51 @@ def simulate_quiebre(id_puente):
         data.loc[idx3:, 'peso_quiebre'] = escalones
 
     return jsonify(data.to_dict(orient='records'))
+
+@dashboard_bp.route('/api/deformacion_por_ubicacion/<int:id_puente>')
+def deformacion_por_ubicacion(id_puente):
+    # Consulta para obtener el peso total de cada galga agrupado por ubicación, filtrado por puente
+    query = f"""
+    SELECT galga.ubicacion, SUM(datos_de_lectura.peso) as peso_total
+    FROM galga
+    JOIN datos_de_lectura ON galga.idGalga = datos_de_lectura.idGalga
+    WHERE galga.idPuente = {id_puente}
+    GROUP BY galga.ubicacion
+    """
+    data = pd.read_sql(query, engine)
+    return jsonify(data.to_dict(orient='records'))
+
+@dashboard_bp.route('/api/grafica_barras_apiladas')
+def grafica_barras_apiladas():
+    try:
+        # Obtener los datos de los puentes y sus galgas
+        query = """
+        SELECT puente.nombre AS puente, galga.ubicacion, AVG(datos_de_lectura.peso) AS promedio_peso
+        FROM datos_de_lectura
+        JOIN galga ON datos_de_lectura.idGalga = galga.idGalga
+        JOIN puente ON galga.idPuente = puente.idPuente
+        GROUP BY puente.nombre, galga.ubicacion
+        ORDER BY puente.nombre
+        """
+        df = pd.read_sql(query, engine)
+
+        # Transformar los datos para el gráfico apilado
+        pivot_df = df.pivot(index='puente', columns='ubicacion', values='promedio_peso').fillna(0)
+        data = []
+
+        for column in pivot_df.columns:
+            data.append({
+                'label': column,
+                'data': pivot_df[column].tolist()
+            })
+
+        response_data = {
+            'labels': pivot_df.index.tolist(),
+            'datasets': data
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        print(f"Error al generar la gráfica de barras apiladas: {e}")
+        return jsonify({'error': str(e)}), 500
