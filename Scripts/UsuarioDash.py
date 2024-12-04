@@ -8,7 +8,7 @@ userDashboard_bp = Blueprint('userDashboard', __name__, template_folder='templat
 # Configuración de la base de datos
 db_config = {
     'host': 'localhost',
-    'user': 'root',
+    'user': 'iot',
     'password': '',
     'database': 'puentesdb'
 }

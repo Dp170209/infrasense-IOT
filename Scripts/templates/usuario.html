@@ -207,7 +207,7 @@
         <!-- Imagen del Puente con Botones para Trillizos -->
         <div class="bridge-container">
           <img
-            src="/static/images/bridge.png"
+            src="/static/bridge.png"
             alt="Puente Trillizos"
             class="bridge-image"
           />
@@ -285,7 +285,7 @@
         <!-- Imagen del Puente con Botones para America -->
         <div class="bridge-container">
           <img
-            src="/static/images/bridge.png"
+            src="/static/bridge.png"
             alt="Puente America"
             class="bridge-image"
           />
@@ -436,33 +436,79 @@
         });
     });
 
-    function updateWarnings(puenteNombre) {
-        const warningContainerTrillizos = document.getElementById('warningContainerTrillizos');
-        const warningContainerAmerica = document.getElementById('warningContainerAmerica');
-        warningContainerTrillizos.innerHTML = '';
-        warningContainerAmerica.innerHTML = '';
+    function updateButtonColors(puentes) {
+    puentes.forEach((puente) => {
+      puente.galgas.forEach((galga) => {
+        const galgaId = galga.idGalga;
+        const riesgo = galga.riesgo;
+        const button =
+          document.getElementById(`btn${galgaId}`) ||
+          document.getElementById(`btnA${galgaId - 23}`);
+        if (button) {
+          if (riesgo === "Buenas Condiciones") {
+            button.style.backgroundColor = "#28a745"; // Verde
+          } else if (riesgo === "Necesita Mantenimiento") {
+            button.style.backgroundColor = "#ffc107"; // Amarillo
+          } else if (riesgo === "Peligro") {
+            button.style.backgroundColor = "#dc3545"; // Rojo
+          }
+        }
+      });
+    });
+  }
 
-        const puentes = JSON.parse('{{ puentes | tojson | safe }}');
+  // Llamada a la API periódica para actualizar botones
+  setInterval(() => {
+    fetch("/userDashboard/api/puentes")
+      .then((response) => response.json())
+      .then((data) => {
+        updateButtonColors(data);
+        console.log("Datos actualizados:", data);
+      })
+      .catch((error) =>
+        console.error("Error al obtener datos del servidor:", error)
+      );
+  }, 5000); // Actualiza cada 5 segundos
 
-        puentes.forEach(puente => {
-            if ((puenteNombre === 'Trillizos' && puente.idPuente === 2) || (puenteNombre === 'America' && puente.idPuente === 4)) {
-                puente.galgas.forEach(galga => {
-                    if (galga.riesgo === 'Peligro') {
-                        const warningMessage = document.createElement('div');
-                        warningMessage.className = 'alert alert-danger mt-3';
-                        warningMessage.role = 'alert';
-                        warningMessage.innerHTML = `⚠️ La galga <strong>${galga.idGalga}</strong> del puente <strong>${puente.nombre}</strong> está en condiciones peligrosas.`;
-                        if (puenteNombre === 'Trillizos') {
-                            warningContainerTrillizos.appendChild(warningMessage);
-                        } else if (puenteNombre === 'America') {
-                            warningContainerAmerica.appendChild(warningMessage);
-                        }
-                    }
-                });
-            }
+  // Actualización de advertencias
+  function updateWarnings(puenteNombre) {
+    const warningContainerTrillizos = document.getElementById(
+      "warningContainerTrillizos"
+    );
+    const warningContainerAmerica = document.getElementById(
+      "warningContainerAmerica"
+    );
+    warningContainerTrillizos.innerHTML = "";
+    warningContainerAmerica.innerHTML = "";
+
+    fetch("/userDashboard/api/puentes")
+      .then((response) => response.json())
+      .then((puentes) => {
+        puentes.forEach((puente) => {
+          if (
+            (puenteNombre === "Trillizos" && puente.idPuente === 2) ||
+            (puenteNombre === "America" && puente.idPuente === 4)
+          ) {
+            puente.galgas.forEach((galga) => {
+              if (galga.riesgo === "Peligro") {
+                const warningMessage = document.createElement("div");
+                warningMessage.className = "alert alert-danger mt-3";
+                warningMessage.role = "alert";
+                warningMessage.innerHTML = `⚠️ La galga <strong>${galga.idGalga}</strong> del puente <strong>${puente.nombre}</strong> está en condiciones peligrosas.`;
+                if (puenteNombre === "Trillizos") {
+                  warningContainerTrillizos.appendChild(warningMessage);
+                } else if (puenteNombre === "America") {
+                  warningContainerAmerica.appendChild(warningMessage);
+                }
+              }
+            });
+          }
         });
-    }
-
+      })
+      .catch((error) =>
+        console.error("Error al actualizar advertencias:", error)
+      );
+  }
     </script>
   </body>
 </html>
