@@ -14,6 +14,112 @@
 
 
     <style>
+        body {
+            font-family: 'Poppins', sans-serif;
+        }
+
+        /* Títulos */
+        h1 {
+            color: #fff;
+            font-size: 45px;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+            background: linear-gradient(135deg, #6c7ae0, #3a4bdb);
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        h2, h3 {
+            color: #fff;
+            font-size: 30px;
+            text-align: center;
+            background: linear-gradient(135deg, #6c7ae0, #3a4bdb);
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+            text-transform: uppercase;
+            margin-bottom: 20px;
+        }
+
+        /* Botones */
+        .btn {
+            padding: 12px 25px;
+            font-size: 16px;
+            border-radius: 30px;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #6c7ae0, #3a4bdb);
+            border: none;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #3a4bdb, #6c7ae0);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+            transform: translateY(-3px);
+        }
+
+        .btn-secondary {
+            background-color: #f0b042;
+            border-color: #f0b042;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background-color: #e09936;
+            transform: translateY(-3px);
+        }
+
+        .btn-info {
+            background-color: #00b8d4;
+            border-color: #00b8d4;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background-color: #008ea1;
+            transform: translateY(-3px);
+        }
+
+        .btn-danger {
+            background-color: #f44336;
+            border-color: #f44336;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background-color: #d32f2f;
+            transform: translateY(-3px);
+        }
+
+        /* Botones de los puentes */
+        .bridge-button {
+            position: absolute;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: box-shadow 0.3s ease-in-out, transform 0.2s ease;
+            font-weight: 500;
+        }
+
+        .bridge-button:hover {
+            animation: pulse 1.5s infinite;
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.7);
+            transform: scale(1.1);
+        }
+
         #chart {
             cursor: crosshair;
         }
@@ -55,22 +161,6 @@
         .bridge-image {
             width: 100%;
             height: auto;
-        }
-
-        .bridge-button {
-            position: absolute;
-            background-color: #007bff;
-            color: white;
-            border: none;
-            padding: 5px;
-            border-radius: 50%;
-            cursor: pointer;
-            transition: box-shadow 0.3s ease-in-out;
-        }
-
-        .bridge-button:hover {
-            animation: pulse 1.5s infinite;
-            box-shadow: 0 0 15px rgba(0, 123, 255, 0.6);
         }
 
         @keyframes pulse {
@@ -120,6 +210,7 @@
             top: 30%;
             left: 93%;
         }
+
         .chart-container {
             display: flex;                /* Utiliza flexbox para centrar contenido */
             justify-content: center;      /* Centra horizontalmente */
