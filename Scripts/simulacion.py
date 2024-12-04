@@ -3,7 +3,7 @@ import time
 from datetime import datetime, timedelta
 import numpy as np
 
-url = "http://192.168.1.211/infrasense-IOT/Scripts/insertar_datos.php"
+url = "http://192.168.0.5/infrasense-IOT/Scripts/insertar_datos.php"
 
 # Parámetros de simulación
 inicio = datetime.now()
@@ -28,10 +28,15 @@ def curva_galga(duracion_subida, duracion_bajada, peso_max):
     return pesos
 
 
-def enviar_datos_simulados(tipo_vehiculo, peso_max):
+def enviar_datos_simulados(tipo_vehiculo, peso_max, id_puente):
     tiempo_actual = inicio  # Tiempo inicial para la primera galga
-    for galga in range(2, 7):  # Galgas de 2 a 6
-        print(f"Iniciando simulación y envío de datos para Galga {galga} ({tipo_vehiculo})")
+    if id_puente == 4:  # Si el ID del puente es 4, solo simulamos una galga
+        galgas = [25]
+    else:  # Para otros casos, simulamos todas las galgas
+        galgas = range(2, 7)
+    
+    for galga in galgas:
+        print(f"Iniciando simulación y envío de datos para Galga {galga} ({tipo_vehiculo}, Puente {id_puente})")
         
         pesos_curva = curva_galga(duracion_subida, duracion_bajada, peso_max)
         
@@ -41,7 +46,8 @@ def enviar_datos_simulados(tipo_vehiculo, peso_max):
                 "idGalga": galga,
                 "Peso": round(peso, 3),
                 "IoThing": f"ESP32-{galga}",
-                "Fecha": fecha_hora.strftime("%Y-%m-%d %H:%M:%S")
+                "Fecha": fecha_hora.strftime("%Y-%m-%d %H:%M:%S"),
+                "idPuente": id_puente  # Nuevo campo para el ID del puente
             }
             headers = {'Content-Type': 'application/json'}
             try:
@@ -60,21 +66,45 @@ def enviar_datos_simulados(tipo_vehiculo, peso_max):
 
 if __name__ == "__main__":
     while True:
-        print("\nSimulación de Pesos")
-        print("1. Simular paso de Auto")
-        print("2. Simular paso de Camión")
-        print("3. Salir")
-        opcion = input("Seleccione una opción: ")
+        print("\nMenú Principal")
+        print("1. Seleccionar Puente")
+        print("2. Salir")
+        opcion_principal = input("Seleccione una opción: ")
         
-        if opcion == "1":
-            print("Simulando paso de un auto...")
-            enviar_datos_simulados("Auto", peso_auto)
-        elif opcion == "2":
-            print("Simulando paso de un camión...")
-            enviar_datos_simulados("Camión", peso_camion)
-        elif opcion == "3":
+        if opcion_principal == "1":
+            print("\nSeleccione el Puente")
+            print("1. Puente Trillizos")
+            print("2. Puente de las Americas")
+            opcion_puente = input("Seleccione un Puente: ")
+            
+            if opcion_puente == "1":
+                id_puente = 2
+            elif opcion_puente == "2":
+                id_puente = 4
+            else:
+                print("Opción no válida. Intente de nuevo.")
+                continue
+            
+            while True:
+                print("\nSimulación de Pesos")
+                print("1. Simular paso de Auto")
+                print("2. Simular paso de Camión")
+                print("3. Volver al Menú Principal")
+                opcion_simulacion = input("Seleccione una opción: ")
+                
+                if opcion_simulacion == "1":
+                    print("Simulando paso de un auto...")
+                    enviar_datos_simulados("Auto", peso_auto, id_puente)
+                elif opcion_simulacion == "2":
+                    print("Simulando paso de un camión...")
+                    enviar_datos_simulados("Camión", peso_camion, id_puente)
+                elif opcion_simulacion == "3":
+                    print("Volviendo al Menú Principal.")
+                    break
+                else:
+                    print("Opción no válida. Intente de nuevo.")
+        elif opcion_principal == "2":
             print("Saliendo del programa.")
             break
         else:
             print("Opción no válida. Intente de nuevo.")
-            
