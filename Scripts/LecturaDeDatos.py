@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify
+import matplotlib as plt
 import pandas as pd
 import numpy as np  # Importamos numpy para cálculos numéricos
 from sqlalchemy import create_engine
@@ -7,8 +8,8 @@ app = Flask(__name__, static_url_path='/static', static_folder='static')
 
 # Configuración de la base de datos
 db_config = {
-    'host': '192.168.1.206',
-    'user': 'fer',
+    'host': 'localhost',
+    'user': 'root',
     'password': '',
     'database': 'puentesdb'
 }
@@ -164,6 +165,54 @@ def simulate_quiebre(id_puente):
         data.loc[idx3:, 'peso_quiebre'] = escalones
 
     return jsonify(data.to_dict(orient='records'))
+
+@app.route('/api/deformacion_por_ubicacion/<int:id_puente>')
+def deformacion_por_ubicacion(id_puente):
+    # Consulta para obtener el peso total de cada galga agrupado por ubicación, filtrado por puente
+    query = f"""
+    SELECT galga.ubicacion, SUM(datos_de_lectura.peso) as peso_total
+    FROM galga
+    JOIN datos_de_lectura ON galga.idGalga = datos_de_lectura.idGalga
+    WHERE galga.idPuente = {id_puente}
+    GROUP BY galga.ubicacion
+    """
+    data = pd.read_sql(query, engine)
+    return jsonify(data.to_dict(orient='records'))
+
+@app.route('/api/grafica_barras_apiladas')
+def grafica_barras_apiladas():
+    try:
+        # Obtener los datos de los puentes y sus galgas
+        query = """
+        SELECT puente.nombre AS puente, galga.ubicacion, AVG(datos_de_lectura.peso) AS promedio_peso
+        FROM datos_de_lectura
+        JOIN galga ON datos_de_lectura.idGalga = galga.idGalga
+        JOIN puente ON galga.idPuente = puente.idPuente
+        GROUP BY puente.nombre, galga.ubicacion
+        ORDER BY puente.nombre
+        """
+        df = pd.read_sql(query, engine)
+
+        # Transformar los datos para el gráfico apilado
+        pivot_df = df.pivot(index='puente', columns='ubicacion', values='promedio_peso').fillna(0)
+        data = []
+
+        for column in pivot_df.columns:
+            data.append({
+                'label': column,
+                'data': pivot_df[column].tolist()
+            })
+
+        response_data = {
+            'labels': pivot_df.index.tolist(),
+            'datasets': data
+        }
+
+        return jsonify(response_data)
+
+    except Exception as e:
+        print(f"Error al generar la gráfica de barras apiladas: {e}")
+        return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
     app.run(debug=True)
