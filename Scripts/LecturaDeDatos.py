@@ -1,4 +1,5 @@
 from flask import Flask, render_template, jsonify
+import matplotlib as plt
 import pandas as pd
 import numpy as np  # Importamos numpy para cálculos numéricos
 from sqlalchemy import create_engine
@@ -164,6 +165,35 @@ def simulate_quiebre(id_puente):
         data.loc[idx3:, 'peso_quiebre'] = escalones
 
     return jsonify(data.to_dict(orient='records'))
+
+@app.route('/api/deformacion_por_ubicacion/<int:id_puente>')
+def deformacion_por_ubicacion(id_puente):
+    # Consulta para obtener el peso total de cada galga agrupado por ubicación, filtrado por puente
+    query = f"""
+    SELECT galga.ubicacion, SUM(datos_de_lectura.peso) as peso_total
+    FROM galga
+    JOIN datos_de_lectura ON galga.idGalga = datos_de_lectura.idGalga
+    WHERE galga.idPuente = {id_puente}
+    GROUP BY galga.ubicacion
+    """
+    data = pd.read_sql(query, engine)
+    return jsonify(data.to_dict(orient='records'))
+
+@app.route('/api/grafica_barras_apiladas')
+def grafica_barras_apiladas():
+    # Obtener los datos necesarios para la gráfica de barras apiladas
+    query = """
+    SELECT puente.nombre AS puente, galga.ubicacion, AVG(datos_de_lectura.peso) AS promedio_peso
+    FROM puente
+    JOIN galga ON puente.idPuente = galga.idPuente
+    JOIN datos_de_lectura ON galga.idGalga = datos_de_lectura.idGalga
+    GROUP BY puente.nombre, galga.ubicacion
+    """
+    data = pd.read_sql(query, engine)
+
+    # Transformar los datos para que puedan ser usados en una gráfica de barras apiladas
+    pivot_data = data.pivot(index='puente', columns='ubicacion', values='promedio_peso').fillna(0).reset_index()
+    return jsonify(pivot_data.to_dict(orient='records'))
 
 if __name__ == '__main__':
     app.run(debug=True)
