@@ -173,6 +173,20 @@
         top: 30%;
         left: 93%;
       }
+      #btnA1 {
+        top: 30%;
+        left: 2%;
+      }
+
+      #btnA2 {
+        top: 30%;
+        left: 48%;
+      }
+
+      #btnA3 {
+        top: 30%;
+        left: 93%;
+      }
       #map {
         height: 350px;
         width: 80%;
@@ -189,12 +203,12 @@
         <button id="button2" class="btn btn-secondary">America</button>
       </div>
       <div id="map" class="d-flex justify-content-center mb-3"></div>
-      <div id="bridgeSection" class="hidden">
-        <!-- Imagen del Puente con Botones -->
+      <div id="bridgeSectionTrillizos" class="hidden">
+        <!-- Imagen del Puente con Botones para Trillizos -->
         <div class="bridge-container">
           <img
             src="/static/images/bridge.png"
-            alt="Puente"
+            alt="Puente Trillizos"
             class="bridge-image"
           />
           <button id="btn1" class="bridge-button" onclick="handleBridgeClick(1)">
@@ -265,7 +279,73 @@
           </div>
         </div>
         <!-- Añadir un contenedor para las advertencias de estado de peligro -->
-        <div id="warningContainer" class="container mt-3"></div>
+        <div id="warningContainerTrillizos" class="container mt-3"></div>
+      </div>
+      <div id="bridgeSectionAmerica" class="hidden">
+        <!-- Imagen del Puente con Botones para America -->
+        <div class="bridge-container">
+          <img
+            src="/static/images/bridge.png"
+            alt="Puente America"
+            class="bridge-image"
+          />
+          <button id="btnA1" class="bridge-button" onclick="handleBridgeClick('A1')">
+            G1
+          </button>
+          <button id="btnA2" class="bridge-button" onclick="handleBridgeClick('A2')">
+            G2
+          </button>
+          <button id="btnA3" class="bridge-button" onclick="handleBridgeClick('A3')">
+            G3
+          </button>
+        </div>
+
+        <!-- Leyenda de Colores de los Botones -->
+        <div class="container mt-4">
+          <div class="d-flex justify-content-center align-items-center">
+            <!-- Buenas Condiciones -->
+            <div class="d-flex align-items-center me-4">
+              <div
+                style="
+                  width: 20px;
+                  height: 20px;
+                  background-color: #28a745;
+                  border-radius: 4px;
+                  margin-right: 8px;
+                "
+              ></div>
+              <span>Buenas Condiciones</span>
+            </div>
+            <!-- Necesita Mantenimiento -->
+            <div class="d-flex align-items-center me-4">
+              <div
+                style="
+                  width: 20px;
+                  height: 20px;
+                  background-color: #ffc107;
+                  border-radius: 4px;
+                  margin-right: 8px;
+                "
+              ></div>
+              <span>Necesita Mantenimiento</span>
+            </div>
+            <!-- Peligro -->
+            <div class="d-flex align-items-center">
+              <div
+                style="
+                  width: 20px;
+                  height: 20px;
+                  background-color: #dc3545;
+                  border-radius: 4px;
+                  margin-right: 8px;
+                "
+              ></div>
+              <span>Peligro</span>
+            </div>
+          </div>
+        </div>
+        <!-- Añadir un contenedor para las advertencias de estado de peligro -->
+        <div id="warningContainerAmerica" class="container mt-3"></div>
       </div>
     </div>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -295,12 +375,17 @@
           const lat = -16.515539;
           const lng = -68.119563;
           addMarker(lat, lng, "Cerca del Puente Trillizos");
-          document.getElementById("bridgeSection").classList.remove("hidden");
+          document.getElementById("bridgeSectionTrillizos").classList.remove("hidden");
+          document.getElementById("bridgeSectionAmerica").classList.add("hidden");
+          updateWarnings("Trillizos");
         });
         document.getElementById("button2").addEventListener("click", () => {
-        const lat = -16.505507;
-        const lng = -68.122106;
-        addMarker(lat, lng, "Cerca del Puente America");
+          const lat = -16.505507;
+          const lng = -68.122106;
+          addMarker(lat, lng, "Cerca del Puente America");
+          document.getElementById("bridgeSectionAmerica").classList.remove("hidden");
+          document.getElementById("bridgeSectionTrillizos").classList.add("hidden");
+          updateWarnings("America");
         });
 
         function showCurrentLocation() {
@@ -336,7 +421,7 @@
                 const riesgo = galga.riesgo;
 
                 // Selecciona el botón por ID de galga
-                const button = document.getElementById(`btn${galgaId}`);
+                const button = document.getElementById(`btn${galgaId}`) || document.getElementById(`btnA${galgaId - 23}`);
                 if (button) {
                     // Cambiar el color del botón según el estado de riesgo
                     if (riesgo === 'Buenas Condiciones') {
@@ -351,104 +436,33 @@
         });
     });
 
-    document.addEventListener('DOMContentLoaded', function () {
-        // Obtenemos los datos de los puentes y galgas desde el contexto de Flask
+    function updateWarnings(puenteNombre) {
+        const warningContainerTrillizos = document.getElementById('warningContainerTrillizos');
+        const warningContainerAmerica = document.getElementById('warningContainerAmerica');
+        warningContainerTrillizos.innerHTML = '';
+        warningContainerAmerica.innerHTML = '';
+
         const puentes = JSON.parse('{{ puentes | tojson | safe }}');
-        
-        // Recorremos las galgas para cambiar el color de los botones según el riesgo al cargar la página
-        updateButtonsAndTable(puentes);
 
-        function updateButtonsAndTable(puentes) {
-            const warningContainer = document.getElementById('warningContainer');
-            warningContainer.innerHTML = ''; // Limpiar advertencias anteriores
-
-            // Recorremos las galgas para cambiar el color de los botones según el riesgo
-            puentes.forEach(puente => {
+        puentes.forEach(puente => {
+            if ((puenteNombre === 'Trillizos' && puente.idPuente === 2) || (puenteNombre === 'America' && puente.idPuente === 4)) {
                 puente.galgas.forEach(galga => {
-                    const galgaId = galga.idGalga;
-                    const riesgo = galga.riesgo;
-
-                    // Selecciona el botón por ID de galga
-                    const button = document.getElementById(`btn${galgaId}`);
-                    if (button) {
-                        // Cambiar el color del botón según el estado de riesgo
-                        if (riesgo === 'Buenas Condiciones') {
-                            button.style.backgroundColor = '#28a745'; // Verde
-                        } else if (riesgo === 'Necesita Mantenimiento') {
-                            button.style.backgroundColor = '#ffc107'; // Amarillo
-                        } else if (riesgo === 'Peligro') {
-                            button.style.backgroundColor = '#dc3545'; // Rojo
-
-                            // Añadir advertencia para galgas en estado de peligro
-                            const warningMessage = document.createElement('div');
-                            warningMessage.className = 'alert alert-danger mt-3';
-                            warningMessage.role = 'alert';
-                            warningMessage.innerHTML = `⚠️ La galga <strong>${galgaId}</strong> del puente <strong>${puente.nombre}</strong> está en condiciones peligrosas.`;
-                            warningContainer.appendChild(warningMessage);
+                    if (galga.riesgo === 'Peligro') {
+                        const warningMessage = document.createElement('div');
+                        warningMessage.className = 'alert alert-danger mt-3';
+                        warningMessage.role = 'alert';
+                        warningMessage.innerHTML = `⚠️ La galga <strong>${galga.idGalga}</strong> del puente <strong>${puente.nombre}</strong> está en condiciones peligrosas.`;
+                        if (puenteNombre === 'Trillizos') {
+                            warningContainerTrillizos.appendChild(warningMessage);
+                        } else if (puenteNombre === 'America') {
+                            warningContainerAmerica.appendChild(warningMessage);
                         }
                     }
                 });
-            });
-
-            // Actualizar la tabla de puentes y galgas asociadas
-            const tableBody = document.querySelector('table tbody');
-            tableBody.innerHTML = ''; // Limpiar el contenido actual
-            puentes.forEach(puente => {
-                const row = document.createElement('tr');
-                row.innerHTML = `
-                    <td>${puente.nombre}</td>
-                    <td>${puente.galgas.length ? puente.galgas.map(galga => galga.idGalga).join(', ') : 'No hay galgas asociadas'}</td>
-                    <td>${puente.galgas.length ? puente.galgas.map(galga => `Galga ${galga.idGalga}: ${galga.porcentaje_esfuerzo}%`).join('<br>') : 'N/A'}</td>
-                    <td>${puente.galgas.length ? puente.galgas.map(galga => {
-                        if (galga.riesgo === 'Buenas Condiciones') {
-                            return '<span class="badge badge-riesgo badge-buenas-condiciones">' + galga.riesgo + '</span>';
-                        } else if (galga.riesgo === 'Necesita Mantenimiento') {
-                            return '<span class="badge badge-riesgo badge-necesita-mantenimiento">' + galga.riesgo + '</span>';
-                        } else if (galga.riesgo === 'Peligro') {
-                            return '<span class="badge badge-riesgo badge-peligro">' + galga.riesgo + '</span>';
-                        } else {
-                            return 'N/A';
-                        }
-                    }).join('<br>') : 'N/A'}</td>
-                `;
-                tableBody.appendChild(row);
-            });
-        }
-    });
-    function updateButtonColors(puentes) {
-        puentes.forEach(puente => {
-          puente.galgas.forEach(galga => {
-            const galgaId = galga.idGalga;
-            const riesgo = galga.riesgo;
-            const button = document.getElementById(`btn${galgaId}`);
-
-            if (button) {
-              if (riesgo === 'Buenas Condiciones') {
-                button.style.backgroundColor = '#28a745'; // Verde
-              } else if (riesgo === 'Necesita Mantenimiento') {
-                button.style.backgroundColor = '#ffc107'; // Amarillo
-              } else if (riesgo === 'Peligro') {
-                button.style.backgroundColor = '#dc3545'; // Rojo
-              }
             }
-          });
         });
-      }
+    }
 
-      // Llamada a la API periódica
-      setInterval(() => {
-        fetch('/api/puentes')
-          .then(response => response.json())
-          .then(data => {
-            updateButtonColors(data);
-          })
-          .catch(error => console.error('Error al obtener datos:', error));
-      }, 5000); // Actualiza cada 5 segundos
-
-      // Función de click en un botón del puente
-      function handleBridgeClick(galgaId) {
-        alert('Detalles de la galga: ' + galgaId);
-      }
     </script>
   </body>
 </html>
