@@ -406,7 +406,8 @@
           addMarker(lat, lng, "Cerca del Puente Trillizos");
           document.getElementById("bridgeSectionTrillizos").classList.remove("hidden");
           document.getElementById("bridgeSectionAmerica").classList.add("hidden");
-          updateWarnings("Trillizos");
+          puenteSeleccionado = "Trillizos";
+          updateWarnings(puenteSeleccionado);
         });
         document.getElementById("button2").addEventListener("click", () => {
           const lat = -16.505507;
@@ -414,7 +415,8 @@
           addMarker(lat, lng, "Cerca del Puente America");
           document.getElementById("bridgeSectionAmerica").classList.remove("hidden");
           document.getElementById("bridgeSectionTrillizos").classList.add("hidden");
-          updateWarnings("America");
+          puenteSeleccionado = "America";
+          updateWarnings(puenteSeleccionado);
         });
 
         function showCurrentLocation() {
@@ -488,56 +490,51 @@
 
   // Llamada a la API periódica para actualizar botones
   setInterval(() => {
-    fetch("/userDashboard/api/puentes")
-      .then((response) => response.json())
-      .then((data) => {
-        updateButtonColors(data);
-        console.log("Datos actualizados:", data);
-      })
-      .catch((error) =>
-        console.error("Error al obtener datos del servidor:", error)
-      );
-  }, 5000); // Actualiza cada 5 segundos
-
-  // Actualización de advertencias
-  function updateWarnings(puenteNombre) {
-    const warningContainerTrillizos = document.getElementById(
-      "warningContainerTrillizos"
+  fetch("/userDashboard/api/puentes")
+    .then((response) => response.json())
+    .then((data) => {
+      updateButtonColors(data);
+      if (puenteSeleccionado) {
+        updateWarnings(puenteSeleccionado, data);
+      }
+    })
+    .catch((error) =>
+      console.error("Error al obtener datos del servidor:", error)
     );
-    const warningContainerAmerica = document.getElementById(
-      "warningContainerAmerica"
-    );
-    warningContainerTrillizos.innerHTML = "";
-    warningContainerAmerica.innerHTML = "";
+}, 2000); 
 
-    fetch("/userDashboard/api/puentes")
-      .then((response) => response.json())
-      .then((puentes) => {
-        puentes.forEach((puente) => {
-          if (
-            (puenteNombre === "Trillizos" && puente.idPuente === 2) ||
-            (puenteNombre === "America" && puente.idPuente === 4)
-          ) {
-            puente.galgas.forEach((galga) => {
-              if (galga.riesgo === "Peligro") {
-                const warningMessage = document.createElement("div");
-                warningMessage.className = "alert alert-danger mt-3";
-                warningMessage.role = "alert";
-                warningMessage.innerHTML = `⚠️ La galga <strong>${galga.idGalga}</strong> del puente <strong>${puente.nombre}</strong> está en condiciones peligrosas.`;
-                if (puenteNombre === "Trillizos") {
-                  warningContainerTrillizos.appendChild(warningMessage);
-                } else if (puenteNombre === "America") {
-                  warningContainerAmerica.appendChild(warningMessage);
-                }
-              }
-            });
+
+  function updateWarnings(puenteNombre, puentes) {
+  const warningContainerTrillizos = document.getElementById(
+    "warningContainerTrillizos"
+  );
+  const warningContainerAmerica = document.getElementById(
+    "warningContainerAmerica"
+  );
+  warningContainerTrillizos.innerHTML = "";
+  warningContainerAmerica.innerHTML = "";
+
+  puentes.forEach((puente) => {
+    if (
+      (puenteNombre === "Trillizos" && puente.idPuente === 2) ||
+      (puenteNombre === "America" && puente.idPuente === 4)
+    ) {
+      puente.galgas.forEach((galga) => {
+        if (galga.riesgo === "Peligro") {
+          const warningMessage = document.createElement("div");
+          warningMessage.className = "alert alert-danger mt-3";
+          warningMessage.role = "alert";
+          warningMessage.innerHTML = `⚠️ La galga <strong>${galga.idGalga}</strong> del puente <strong>${puente.nombre}</strong> está en condiciones peligrosas.`;
+          if (puenteNombre === "Trillizos") {
+            warningContainerTrillizos.appendChild(warningMessage);
+          } else if (puenteNombre === "America") {
+            warningContainerAmerica.appendChild(warningMessage);
           }
-        });
-      })
-      .catch((error) =>
-        console.error("Error al actualizar advertencias:", error)
-      );
-  }
+        }
+      });
+    }
+  });
+}
     </script>
   </body>
 </html>
