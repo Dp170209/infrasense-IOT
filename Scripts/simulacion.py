@@ -3,7 +3,7 @@ import time
 from datetime import datetime, timedelta
 import numpy as np
 
-url = "http://192.168.0.5/infrasense-IOT/Scripts/insertar_datos.php"
+url = "http://localhost/infrasense-IOT/Scripts/insertar_datos.php"
 
 # Parámetros de simulación
 inicio = datetime.now()

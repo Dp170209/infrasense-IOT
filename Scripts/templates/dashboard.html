@@ -268,6 +268,14 @@
     <div class="container mt-5">
         <h1 class="text-center">Dashboard de Galgas y Puentes</h1>
 
+        <div class="d-flex justify-content-center my-4">
+            <input type="text" id="filename" placeholder="Ingrese el nombre del archivo" class="form-control w-25 me-3" />
+            <button id="downloadCsvButton" class="btn btn-success">Descargar Reporte</button>
+        </div>
+        
+        
+
+
         <!-- Tabla de Puentes y Galgas -->
         <h2 class="mt-5">Lista de Puentes y Galgas Asociadas</h2>
         <table class="table table-striped">
@@ -413,6 +421,24 @@
 
     <!-- Script JavaScript -->
     <script>
+
+        document.getElementById('downloadCsvButton').addEventListener('click', function () {
+                const filename = document.getElementById('filename').value.trim();
+
+                if (filename === '') {
+                    alert('Por favor, ingrese un nombre para el archivo.');
+                    return;
+                }
+
+                // Crear un enlace para descargar el archivo con el nombre especificado
+                const downloadUrl = `/dashboard/download_csv?filename=${encodeURIComponent(filename)}.csv`;
+                window.location.href = downloadUrl;
+            });
+        
+
+
+
+
         async function renderBarChart() {
             try {
                 const response = await fetch('/dashboard/api/grafica_barras_apiladas');

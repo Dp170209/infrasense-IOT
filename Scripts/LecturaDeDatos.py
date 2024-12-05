@@ -3,12 +3,16 @@ import matplotlib as plt
 import pandas as pd
 import numpy as np  # Importamos numpy para cálculos numéricos
 from sqlalchemy import create_engine
+import tempfile
+from flask import request, send_file
+
+
 
 dashboard_bp = Blueprint('dashboard', __name__, template_folder='templates',static_url_path='/static', static_folder='static')
 # Configuración de la base de datos
 db_config = {
     'host': 'localhost',
-    'user': 'root',
+    'user': 'iot',
     'password': '',
     'database': 'puentesdb'
 }
@@ -212,3 +216,32 @@ def grafica_barras_apiladas():
     except Exception as e:
         print(f"Error al generar la gráfica de barras apiladas: {e}")
         return jsonify({'error': str(e)}), 500
+    
+@dashboard_bp.route('/download_csv', methods=['GET'])
+def download_csv():
+    filename = request.args.get('filename', 'reporte.csv')
+    
+    # Consulta para obtener los datos necesarios del CSV
+    query = """
+    SELECT p.idPuente, p.nombre AS nombre_puente, g.idGalga, g.ubicacion, d.peso, d.iothing
+    FROM puente p
+    JOIN galga g ON p.idPuente = g.idPuente
+    JOIN datos_de_lectura d ON g.idGalga = d.idGalga
+    ORDER BY p.idPuente, g.idGalga
+    """
+    try:
+        # Obtener datos de la base de datos
+        data = pd.read_sql(query, engine)
+        
+        # Definir la ruta de archivo temporal
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix='.csv')
+        temp_file.close()
+        
+        # Guardar los datos en el archivo CSV
+        data.to_csv(temp_file.name, index=False, encoding='utf-8')
+
+        # Enviar el archivo CSV al usuario para descargar
+        return send_file(temp_file.name, as_attachment=True, download_name=filename)
+
+    except Exception as e:
+        return jsonify({"error": f"Error al generar el archivo CSV: {e}"})
