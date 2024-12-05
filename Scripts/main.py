@@ -69,7 +69,7 @@ BOARD_TYPE = Board().type
 print("Tarjeta Detectada:", BOARD_TYPE)
 
 # Configuración inicial
-url = "http://192.168.1.206/infrasense-IOT/Scripts/insertar_datos.php"  # Reemplaza con la URL correcta
+url = "http://localhost/infrasense-IOT/Scripts/insertar_datos.php"  # Reemplaza con la URL correcta
 
 # Sincronizar tiempo con NTP
 def sincronizar_tiempo():

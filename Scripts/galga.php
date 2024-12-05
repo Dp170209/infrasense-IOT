@@ -1,5 +1,5 @@
 <?php
-$conexion = new mysqli("localhost", "root", "", "puentesDB");
+$conexion = new mysqli("localhost", "iot", "", "puentesDB");
 
 if ($conexion->connect_error) {
     die("Conexión fallida: " . $conexion->connect_error);
